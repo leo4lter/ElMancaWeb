@@ -1,0 +1,72 @@
+import React, { useState } from 'react';
+import { SiteContentProvider, useSiteContent } from './context/SiteContentContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { HeroSection } from './components/HeroSection';
+import { MarqueeSection } from './components/MarqueeSection';
+import { AboutSection } from './components/AboutSection';
+import { ServicesSection } from './components/ServicesSection';
+import { BrandsCarousel } from './components/BrandsCarousel';
+import { PricingSection } from './components/PricingSection';
+import { ProjectsSection } from './components/ProjectsSection';
+import { ContactModal } from './components/ContactModal';
+import { AdminDashboard } from './components/AdminDashboard';
+
+function MainApp() {
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const { isAdminRoute } = useSiteContent();
+
+  const handleOpenContact = () => setIsContactOpen(true);
+  const handleCloseContact = () => setIsContactOpen(false);
+
+  // If URL is /admin or #admin, render the private Admin Dashboard
+  if (isAdminRoute) {
+    return <AdminDashboard />;
+  }
+
+  // Otherwise, render the 100% clean public spectator experience
+  return (
+    <div
+      id="main-wrapper"
+      className="w-full min-h-screen relative select-none"
+      style={{
+        backgroundColor: '#060A14',
+        overflowX: 'clip',
+        fontFamily: "'Kanit', sans-serif",
+      }}
+    >
+      {/* 1. HERO SECTION */}
+      <HeroSection onOpenContact={handleOpenContact} />
+
+      {/* 2. MARQUEE SECTION (Galería bajo Home) */}
+      <MarqueeSection />
+
+      {/* 3. ABOUT SECTION - NUESTRA ESENCIA */}
+      <AboutSection onOpenContact={handleOpenContact} />
+
+      {/* 4. SERVICES SECTION - PILARES FUNDAMENTALES */}
+      <ServicesSection />
+
+      {/* 5. BRANDS CAROUSEL (Debajo de Servicios: logos B&N con iluminación al hover) */}
+      <BrandsCarousel />
+
+      {/* 6. PRICING SECTION - PLANES & PATROCINIO */}
+      <PricingSection onOpenContact={handleOpenContact} />
+
+      {/* 7. PROJECTS SECTION (Fiesta Nacional Playas Doradas en directo, El Canal @elmancasg, y Webs con carrusel GIF/PNG) */}
+      <ProjectsSection onOpenContact={handleOpenContact} />
+
+      {/* Interactive Contact Modal */}
+      <ContactModal isOpen={isContactOpen} onClose={handleCloseContact} />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <SiteContentProvider>
+        <MainApp />
+      </SiteContentProvider>
+    </ErrorBoundary>
+  );
+}
