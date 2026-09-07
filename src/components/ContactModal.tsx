@@ -77,6 +77,26 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
               <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">
                 Contanos tu evento, negocio, comercio o idea. Te responderemos con una propuesta a tu medida.
               </p>
+
+              {/* Direct channels banner */}
+              <div className="flex flex-wrap items-center gap-2.5 mt-3 pt-3 border-t border-[#2A52BE]/30">
+                <a
+                  href="https://wa.me/5492920214741?text=Hola%20Manca%2C%20quisiera%20hacer%20una%20consulta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 text-xs font-medium transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>+54 9 2920 21-4741</span>
+                </a>
+                <a
+                  href="mailto:contacto@elmanca.com.ar?subject=Consulta%20desde%20la%20web%20Manca"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#14265E] border border-[#2A52BE]/40 text-[#93C5FD] hover:text-white text-xs font-medium transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5 text-[#60A5FA]" />
+                  <span>contacto@elmanca.com.ar</span>
+                </a>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">

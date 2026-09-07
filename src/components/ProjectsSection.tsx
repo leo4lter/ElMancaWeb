@@ -15,6 +15,8 @@ import {
   Sparkles,
   X,
   Tv,
+  Phone,
+  Mail,
 } from 'lucide-react';
 
 export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
@@ -598,6 +600,26 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
           <p className="text-sm text-[#94A3B8] mt-1 max-w-md font-light">
             El puente entre las historias locales y la transformación digital de nuestros comercios y eventos.
           </p>
+
+          {/* Official Contact Details */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-xs">
+            <a
+              href="https://wa.me/5492920214741?text=Hola%20Manca%2C%20quisiera%20hacer%20una%20consulta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-white hover:text-[#60A5FA] transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="font-medium">+54 9 2920 21-4741</span>
+            </a>
+            <a
+              href="mailto:contacto@elmanca.com.ar?subject=Consulta%20desde%20la%20web%20Manca"
+              className="flex items-center gap-2 text-white hover:text-[#60A5FA] transition-colors"
+            >
+              <Mail className="w-3.5 h-3.5 text-[#60A5FA]" />
+              <span className="font-medium">contacto@elmanca.com.ar</span>
+            </a>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">

@@ -10,6 +10,7 @@ import { PricingSection } from './components/PricingSection';
 import { ProjectsSection } from './components/ProjectsSection';
 import { ContactModal } from './components/ContactModal';
 import { AdminDashboard } from './components/AdminDashboard';
+import { FloatingActions } from './components/FloatingActions';
 
 function MainApp() {
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -57,6 +58,9 @@ function MainApp() {
 
       {/* Interactive Contact Modal */}
       <ContactModal isOpen={isContactOpen} onClose={handleCloseContact} />
+
+      {/* Floating Action Buttons: Scroll to Top (icon only) & Direct Contact */}
+      <FloatingActions onOpenContactModal={handleOpenContact} />
     </div>
   );
 }
