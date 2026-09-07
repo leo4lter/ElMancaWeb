@@ -26,13 +26,24 @@ async function startServer() {
     console.warn('Could not create workspace data dir:', err);
   }
 
+  // CORS support for API requests
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
   // API Route: Health Check
-  app.get('/api/health', (req, res) => {
+  app.get(['/api/health', '/api/health.php'], (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
   });
 
-  // API Route: Get Global Site Content (Public to all visitors)
-  app.get('/api/content', (req, res) => {
+  // API Route: Get Global Site Content (supports both /api/content and /api/content.php)
+  app.get(['/api/content', '/api/content.php'], (req, res) => {
     try {
       if (fs.existsSync(workspaceDataFile)) {
         const raw = fs.readFileSync(workspaceDataFile, 'utf-8');
@@ -49,8 +60,8 @@ async function startServer() {
     }
   });
 
-  // API Route: Save Global Site Content (Published by Admin)
-  app.post('/api/content', (req, res) => {
+  // API Route: Save Global Site Content (supports both /api/content and /api/content.php)
+  app.post(['/api/content', '/api/content.php'], (req, res) => {
     try {
       const payload = req.body;
       if (!payload || typeof payload !== 'object') {
@@ -97,6 +108,72 @@ async function startServer() {
       return res.status(500).json({ error: 'Error saving site content' });
     }
   });
+
+  // Uploads directory configuration
+  const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  const distUploadsDir = path.join(process.cwd(), 'dist', 'uploads');
+
+  try {
+    if (!fs.existsSync(publicUploadsDir)) {
+      fs.mkdirSync(publicUploadsDir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('Could not create public/uploads:', err);
+  }
+
+  // API Route: Image Upload (supports both /api/upload and /api/upload.php)
+  app.post(['/api/upload', '/api/upload.php'], (req, res) => {
+    try {
+      const { image, name } = req.body;
+      if (!image || typeof image !== 'string') {
+        return res.status(400).json({ error: 'No se envió ninguna imagen.' });
+      }
+
+      const match = image.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+      if (!match) {
+        return res.status(400).json({ error: 'Formato de imagen inválido. Debe ser base64.' });
+      }
+
+      const extRaw = match[1].toLowerCase();
+      const ext = extRaw === 'svg+xml' ? 'svg' : extRaw === 'jpeg' ? 'jpg' : extRaw;
+      const base64Data = match[2];
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      const safePrefix = (name || 'manca')
+        .replace(/[^a-zA-Z0-9-_]/g, '_')
+        .toLowerCase()
+        .slice(0, 30);
+      const filename = `${safePrefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+
+      fs.writeFileSync(path.join(publicUploadsDir, filename), buffer);
+
+      // Also copy to dist/uploads if dist exists
+      try {
+        if (fs.existsSync(path.join(process.cwd(), 'dist'))) {
+          if (!fs.existsSync(distUploadsDir)) {
+            fs.mkdirSync(distUploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(distUploadsDir, filename), buffer);
+        }
+      } catch (e) {
+        console.warn('Could not copy to dist/uploads:', e);
+      }
+
+      const url = `/uploads/${filename}`;
+      return res.json({
+        success: true,
+        url,
+        filename,
+        message: 'Imagen guardada con éxito en el servidor.',
+      });
+    } catch (err) {
+      console.error('Error in /api/upload:', err);
+      return res.status(500).json({ error: 'Error procesando la imagen' });
+    }
+  });
+
+  // Serve uploads statically
+  app.use('/uploads', express.static(publicUploadsDir));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

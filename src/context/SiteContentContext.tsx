@@ -51,7 +51,15 @@ interface SiteContentState {
   hasPendingChanges: boolean;
   setHasPendingChanges: (val: boolean) => void;
   lastAppliedTime: string | null;
-  applyAllChanges: () => Promise<{ success: boolean; message: string; timestamp: string }>;
+  applyAllChanges: () => Promise<{ success: boolean; message: string; timestamp: string; hostingerSaved?: boolean }>;
+
+  // Hostinger Integration & Cloud Storage
+  hostingerUrl: string;
+  setHostingerUrl: (url: string) => void;
+  isHostingerConnected: boolean;
+  testHostingerConnection: (urlToCheck?: string) => Promise<{ success: boolean; message: string; data?: any }>;
+  uploadImageToHostinger: (file: File, suggestedName?: string) => Promise<string>;
+  syncWithHostinger: () => Promise<{ success: boolean; message: string }>;
 
   // Backup & Restore
   exportContentJson: () => string;
@@ -61,8 +69,8 @@ interface SiteContentState {
   resetToDefaults: () => void;
 
   // Active admin tab
-  adminActiveTab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival';
-  setAdminActiveTab: (tab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival') => void;
+  adminActiveTab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger';
+  setAdminActiveTab: (tab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger') => void;
 }
 
 const defaultFestivalNights: FestivalNightItem[] = [
@@ -289,8 +297,20 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Admin Route state
   const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminUrl());
   const [adminActiveTab, setAdminActiveTab] = useState<
-    'icon' | 'marquee' | 'brands' | 'webs' | 'festival'
+    'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger'
   >('icon');
+
+  // Hostinger Cloud URL configuration & connection status
+  const [hostingerUrl, setHostingerUrlState] = useState<string>(() => {
+    return safeStorage.get<string>('manca_hostinger_url', 'https://elmanca.com.ar');
+  });
+  const [isHostingerConnected, setIsHostingerConnected] = useState<boolean>(false);
+
+  const setHostingerUrl = (url: string) => {
+    const clean = url.trim().replace(/\/+$/, '');
+    setHostingerUrlState(clean);
+    safeStorage.set('manca_hostinger_url', clean);
+  };
 
   // Watch for URL changes (popstate and hashchange)
   useEffect(() => {
@@ -378,64 +398,218 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
   });
 
-  // Global Sync: Fetch live published content from server API on boot (for all visitors)
+  // Global Sync: Fetch live published content from Hostinger or server API on boot
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/content')
-      .then((res) => {
-        if (!res.ok) throw new Error('API content not available');
-        return res.json();
-      })
-      .then((data) => {
-        if (!isMounted || !data || typeof data !== 'object') return;
 
-        if (data.customIconUrl !== undefined) {
-          setCustomIconUrlState(data.customIconUrl);
-          if (data.customIconUrl) {
-            safeStorage.set('manca_custom_icon', data.customIconUrl);
-            const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-            if (link) link.href = data.customIconUrl;
+    const applyIncomingData = (data: any) => {
+      if (!isMounted || !data || typeof data !== 'object') return;
+
+      if (data.customIconUrl !== undefined) {
+        setCustomIconUrlState(data.customIconUrl);
+        if (data.customIconUrl) {
+          safeStorage.set('manca_custom_icon', data.customIconUrl);
+          const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+          if (link) link.href = data.customIconUrl;
+        }
+      }
+      if (data.customFooterLogoUrl !== undefined) {
+        setCustomFooterLogoUrlState(data.customFooterLogoUrl);
+        if (data.customFooterLogoUrl) {
+          safeStorage.set('manca_footer_logo', data.customFooterLogoUrl);
+        }
+      }
+      if (Array.isArray(data.marqueeItems) && data.marqueeItems.length > 0) {
+        setMarqueeItemsState(data.marqueeItems);
+        safeStorage.set('manca_marquee_items', data.marqueeItems);
+      }
+      if (Array.isArray(data.brandLogos) && data.brandLogos.length > 0) {
+        setBrandLogosState(data.brandLogos);
+        safeStorage.set('manca_brand_logos', data.brandLogos);
+      }
+      if (Array.isArray(data.webProjects) && data.webProjects.length > 0) {
+        setWebProjectsState(data.webProjects);
+        safeStorage.set('manca_web_projects', data.webProjects);
+      }
+      if (Array.isArray(data.festivalNights) && data.festivalNights.length > 0) {
+        setFestivalNightsState(data.festivalNights);
+        safeStorage.set('manca_festival_nights', data.festivalNights);
+      }
+      if (Array.isArray(data.channelVideos) && data.channelVideos.length > 0) {
+        setChannelVideosState(data.channelVideos);
+        safeStorage.set('manca_channel_videos', data.channelVideos);
+      }
+      if (data.lastAppliedTime) {
+        setLastAppliedTime(data.lastAppliedTime);
+        safeStorage.set('manca_last_applied_time', data.lastAppliedTime);
+      }
+    };
+
+    const fetchContent = async () => {
+      // 1. If hostingerUrl is configured, try Hostinger API first
+      const cleanHostinger = hostingerUrl?.trim().replace(/\/+$/, '');
+      if (cleanHostinger) {
+        try {
+          const hRes = await fetch(`${cleanHostinger}/api/content.php`, { mode: 'cors' });
+          if (hRes.ok) {
+            const hData = await hRes.json();
+            if (hData && !hData.error && (hData.marqueeItems || hData.brandLogos || hData.customIconUrl)) {
+              applyIncomingData(hData);
+              setIsHostingerConnected(true);
+              return;
+            }
           }
+        } catch (e) {
+          // Hostinger not yet reached or CORS pending, proceed to local API
         }
-        if (data.customFooterLogoUrl !== undefined) {
-          setCustomFooterLogoUrlState(data.customFooterLogoUrl);
-          if (data.customFooterLogoUrl) {
-            safeStorage.set('manca_footer_logo', data.customFooterLogoUrl);
-          }
+      }
+
+      // 2. Local Node/Express server /api/content
+      try {
+        const res = await fetch('/api/content');
+        if (res.ok) {
+          const data = await res.json();
+          if (data) applyIncomingData(data);
         }
-        if (Array.isArray(data.marqueeItems) && data.marqueeItems.length > 0) {
-          setMarqueeItemsState(data.marqueeItems);
-          safeStorage.set('manca_marquee_items', data.marqueeItems);
-        }
-        if (Array.isArray(data.brandLogos) && data.brandLogos.length > 0) {
-          setBrandLogosState(data.brandLogos);
-          safeStorage.set('manca_brand_logos', data.brandLogos);
-        }
-        if (Array.isArray(data.webProjects) && data.webProjects.length > 0) {
-          setWebProjectsState(data.webProjects);
-          safeStorage.set('manca_web_projects', data.webProjects);
-        }
-        if (Array.isArray(data.festivalNights) && data.festivalNights.length > 0) {
-          setFestivalNightsState(data.festivalNights);
-          safeStorage.set('manca_festival_nights', data.festivalNights);
-        }
-        if (Array.isArray(data.channelVideos) && data.channelVideos.length > 0) {
-          setChannelVideosState(data.channelVideos);
-          safeStorage.set('manca_channel_videos', data.channelVideos);
-        }
-        if (data.lastAppliedTime) {
-          setLastAppliedTime(data.lastAppliedTime);
-          safeStorage.set('manca_last_applied_time', data.lastAppliedTime);
-        }
-      })
-      .catch(() => {
-        // Fallback silently to local cache or bundled data
-      });
+      } catch (err) {
+        // Fallback silently to local storage or initialSiteData
+      }
+    };
+
+    fetchContent();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [hostingerUrl]);
+
+  // Test Hostinger Connection
+  const testHostingerConnection = async (urlToCheck?: string) => {
+    const targetUrl = (urlToCheck || hostingerUrl).trim().replace(/\/+$/, '');
+    if (!targetUrl) {
+      return { success: false, message: 'Ingresa la URL de tu sitio en Hostinger.' };
+    }
+    try {
+      const endpoint = `${targetUrl}/api/content.php`;
+      const res = await fetch(endpoint, { method: 'GET', mode: 'cors' });
+      if (res.ok) {
+        const data = await res.json();
+        setIsHostingerConnected(true);
+        return {
+          success: true,
+          message: '¡Conexión exitosa con Hostinger! La API respondió correctamente.',
+          data,
+        };
+      } else {
+        setIsHostingerConnected(false);
+        return {
+          success: false,
+          message: `Hostinger respondió con código ${res.status}. Verifica haber subido la carpeta 'api' dentro de 'public_html/'.`,
+        };
+      }
+    } catch (err: any) {
+      setIsHostingerConnected(false);
+      return {
+        success: false,
+        message: `No se pudo conectar con ${targetUrl}/api/content.php. Asegúrate de que el dominio esté activo y hayas subido los archivos PHP.`,
+      };
+    }
+  };
+
+  // Upload Image to Hostinger (with fallback to local /api/upload)
+  const uploadImageToHostinger = async (file: File, suggestedName = 'manca'): Promise<string> => {
+    const { compressImageFile } = await import('../utils/imageCompressor');
+    const compressed = await compressImageFile(file, 1600, 0.88);
+    const cleanHostinger = hostingerUrl.trim().replace(/\/+$/, '');
+
+    // 1. Try configured Hostinger endpoint
+    if (cleanHostinger) {
+      try {
+        const res = await fetch(`${cleanHostinger}/api/upload.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: compressed, name: suggestedName }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.url) {
+            setIsHostingerConnected(true);
+            return data.url;
+          }
+        }
+      } catch (err) {
+        console.warn('Hostinger upload error, trying local server fallback:', err);
+      }
+    }
+
+    // 2. Try local server or same-domain Hostinger (/api/upload.php or /api/upload)
+    try {
+      const res = await fetch('/api/upload.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: compressed, name: suggestedName }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.url) return data.url;
+      }
+    } catch (e) {}
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: compressed, name: suggestedName }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.url) return data.url;
+      }
+    } catch (err2) {
+      console.warn('Local /api/upload error:', err2);
+    }
+
+    // 3. Fallback to compressed base64
+    return compressed;
+  };
+
+  // Manual trigger to sync current site state directly with Hostinger
+  const syncWithHostinger = async () => {
+    const cleanHostinger = hostingerUrl.trim().replace(/\/+$/, '');
+    if (!cleanHostinger) {
+      return { success: false, message: 'Por favor ingresa la URL de Hostinger.' };
+    }
+    const payload = {
+      customIconUrl,
+      customFooterLogoUrl,
+      lastAppliedTime: new Date().toLocaleTimeString('es-AR'),
+      marqueeItems,
+      brandLogos,
+      webProjects,
+      festivalNights,
+      channelVideos,
+    };
+    try {
+      const res = await fetch(`${cleanHostinger}/api/content.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setIsHostingerConnected(true);
+        return {
+          success: true,
+          message: '¡Todo el sitio fue sincronizado y guardado con éxito en Hostinger!',
+        };
+      }
+      return { success: false, message: `Hostinger devolvió código ${res.status}` };
+    } catch (err) {
+      return {
+        success: false,
+        message: 'No se pudo contactar con Hostinger. Revisa que content.php esté en public_html/api/.',
+      };
+    }
+  };
 
   const setCustomFooterLogoUrl = (url: string | null) => {
     setCustomFooterLogoUrlState(url);
@@ -649,7 +823,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setLastAppliedTime(now);
     setHasPendingChanges(false);
 
-    // 2. Server-side persistence to src/data/siteContent.json (persists across redeploys & visitors)
+    // 2. Server-side persistence (Local Express server)
     const payload = {
       customIconUrl,
       customFooterLogoUrl,
@@ -662,6 +836,26 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     let serverSaved = false;
+    let hostingerSaved = false;
+
+    // Save to Hostinger if configured
+    const cleanHostinger = hostingerUrl.trim().replace(/\/+$/, '');
+    if (cleanHostinger) {
+      try {
+        const hRes = await fetch(`${cleanHostinger}/api/content.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (hRes.ok) {
+          hostingerSaved = true;
+          setIsHostingerConnected(true);
+        }
+      } catch (err) {
+        console.warn('Could not save directly to Hostinger:', err);
+      }
+    }
+
     try {
       const res = await fetch('/api/content', {
         method: 'POST',
@@ -677,16 +871,23 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent('manca_content_applied', { detail: { timestamp: now, serverSaved } })
+        new CustomEvent('manca_content_applied', {
+          detail: { timestamp: now, serverSaved, hostingerSaved },
+        })
       );
     }
 
+    const message = hostingerSaved
+      ? '¡Cambios guardados con éxito en tu servidor de Hostinger! Ya están visibles en vivo para todos.'
+      : serverSaved
+      ? '¡Cambios aplicados y guardados en el servidor! Si tienes Hostinger conectado, revisa la pestaña Hostinger.'
+      : '¡Cambios aplicados localmente!';
+
     return {
       success: true,
-      message: serverSaved
-        ? '¡Cambios aplicados y guardados en el servidor! Todos los visitantes verán esta versión permanentemente.'
-        : '¡Cambios aplicados en el navegador local!',
+      message,
       timestamp: now,
+      hostingerSaved,
     };
   };
 
@@ -762,6 +963,12 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setHasPendingChanges,
         lastAppliedTime,
         applyAllChanges,
+        hostingerUrl,
+        setHostingerUrl,
+        isHostingerConnected,
+        testHostingerConnection,
+        uploadImageToHostinger,
+        syncWithHostinger,
         exportContentJson,
         importContentJson,
         resetToDefaults,

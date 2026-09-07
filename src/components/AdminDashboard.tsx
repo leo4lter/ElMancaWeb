@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSiteContent } from '../context/SiteContentContext';
 import { MancaCircularIcon } from './MancaBrand';
 import { compressImageFile } from '../utils/imageCompressor';
+import { AdminHostingerTab } from './AdminHostingerTab';
 import {
   Globe,
   SlidersHorizontal,
@@ -23,6 +24,7 @@ import {
   Download,
   UploadCloud,
   Database,
+  Server,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -55,11 +57,14 @@ export const AdminDashboard: React.FC = () => {
     resetToDefaults,
     adminActiveTab,
     setAdminActiveTab,
+    hostingerUrl,
+    isHostingerConnected,
+    uploadImageToHostinger,
   } = useSiteContent();
 
-  const [activeTab, setActiveTab] = useState<'icon' | 'marquee' | 'brands' | 'webs' | 'festival'>(
-    adminActiveTab || 'icon'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger'
+  >(adminActiveTab || 'icon');
 
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -129,18 +134,24 @@ export const AdminDashboard: React.FC = () => {
     e.target.value = '';
   };
 
-  // Safe file upload with automatic image compression to avoid quota issues
+  // Safe file upload to Hostinger with fallback
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    onSuccess: (dataUrl: string) => void
+    onSuccess: (url: string) => void,
+    suggestedName: string = 'manca'
   ) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
         setIsProcessing(true);
-        const compressed = await compressImageFile(file, 1200, 0.85);
-        onSuccess(compressed);
-        showNotification('¡Imagen cargada! Presioná "Aplicar Cambios" para publicarla');
+        showNotification('Subiendo imagen...');
+        const finalUrl = await uploadImageToHostinger(file, suggestedName);
+        onSuccess(finalUrl);
+        if (finalUrl.startsWith('http')) {
+          showNotification('✓ ¡Imagen alojada en Hostinger! Tocá "Aplicar Cambios"');
+        } else {
+          showNotification('✓ Imagen cargada. Tocá "Aplicar Cambios"');
+        }
       } catch (err) {
         console.error('Error procesando imagen:', err);
         alert('Hubo un problema al procesar la imagen.');
@@ -148,6 +159,7 @@ export const AdminDashboard: React.FC = () => {
         setIsProcessing(false);
       }
     }
+    e.target.value = '';
   };
 
   // Temporary forms for new items
@@ -358,6 +370,31 @@ export const AdminDashboard: React.FC = () => {
           >
             <Film className="w-4 h-4 text-[#3870E0]" />
             <span>5. Festival & Coberturas ({festivalNights.length})</span>
+          </button>
+
+          <button
+            type="button"
+            id="admin-tab-hostinger"
+            onClick={() => setActiveTab('hostinger')}
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'hostinger'
+                ? 'border-[#3870E0] text-white bg-[#0E1A38]'
+                : isHostingerConnected
+                ? 'border-transparent text-emerald-400 hover:text-emerald-300'
+                : 'border-transparent text-[#93C5FD] hover:text-white'
+            }`}
+          >
+            <Server className={`w-4 h-4 ${isHostingerConnected ? 'text-emerald-400' : 'text-[#3870E0]'}`} />
+            <span>6. Hostinger & Archivos</span>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                isHostingerConnected
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+              }`}
+            >
+              {isHostingerConnected ? 'Conectado' : 'Configurar'}
+            </span>
           </button>
         </div>
       </div>
@@ -1193,6 +1230,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* TAB 6: HOSTINGER & ARCHIVOS */}
+        {activeTab === 'hostinger' && <AdminHostingerTab />}
       </main>
 
       {/* Persistent Bottom Action Dock with Functional Apply Changes Button */}
@@ -1213,7 +1253,9 @@ export const AdminDashboard: React.FC = () => {
                   : 'Todos los contenidos y fotos están sincronizados con la web pública.'}
               </span>
               <span className="text-[11px] text-[#93C5FD]">
-                Las imágenes, logos y marcas se guardan de forma permanente y segura en tu navegador.
+                {isHostingerConnected
+                  ? 'Conexión con Hostinger activa: tus fotos y datos se sincronizan con elmanca.com.ar.'
+                  : 'Las imágenes y contenidos se guardan en el servidor y de forma permanente en tu navegador.'}
               </span>
             </div>
           </div>
