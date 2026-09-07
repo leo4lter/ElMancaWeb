@@ -20,7 +20,7 @@ import {
 export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
   onOpenContact,
 }) => {
-  const { webProjects, channelVideos, customIconUrl, customFooterLogoUrl } = useSiteContent();
+  const { webProjects, channelVideos, customIconUrl, customFooterLogoUrl, festivalNights } = useSiteContent();
 
   // Active video modal state for playing directly
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -42,33 +42,7 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
     setWebIndex((prev) => (prev - 1 + webProjects.length) % webProjects.length);
   };
 
-  // 1. Playas Doradas 2026 data with EXACT direct thumbnails
-  const playasDoradasNights = [
-    {
-      night: 'Noche 1',
-      title: 'Apertura & Escenario Principal',
-      youtubeId: 'QMQ4kJgnf0M',
-      url: 'https://www.youtube.com/live/QMQ4kJgnf0M?si=u7LGmLoHpSz_uQM1',
-      thumbnail: 'https://i.ytimg.com/vi/QMQ4kJgnf0M/hqdefault.jpg',
-      badge: 'Transmisión Oficial Noche 1',
-    },
-    {
-      night: 'Noche 2',
-      title: 'Artistas, Shows & Cobertura',
-      youtubeId: '6sBlnahh6Y4',
-      url: 'https://www.youtube.com/live/6sBlnahh6Y4?si=HVbcGwsiHIRzuAfj',
-      thumbnail: 'https://i.ytimg.com/vi/6sBlnahh6Y4/hqdefault.jpg',
-      badge: 'Transmisión Oficial Noche 2',
-    },
-    {
-      night: 'Noche 3',
-      title: 'Gran Cierre del Festival',
-      youtubeId: 'dHIYvORgujw',
-      url: 'https://www.youtube.com/live/dHIYvORgujw?si=J7qhGi9FixakN2CB',
-      thumbnail: 'https://i.ytimg.com/vi/dHIYvORgujw/hqdefault.jpg',
-      badge: 'Transmisión Oficial Noche 3',
-    },
-  ];
+  const playasDoradasNights = festivalNights;
 
   return (
     <section

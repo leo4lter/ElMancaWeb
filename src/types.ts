@@ -52,3 +52,13 @@ export interface ChannelVideoItem {
   duration?: string;
   date?: string;
 }
+
+export interface FestivalNightItem {
+  night: string;
+  title: string;
+  youtubeId: string;
+  url: string;
+  thumbnail: string;
+  badge?: string;
+}
+

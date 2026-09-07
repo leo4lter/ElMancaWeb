@@ -17,6 +17,9 @@ import {
   ArrowLeft,
   Eye,
   Sparkles,
+  Save,
+  Film,
+  X,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -37,21 +40,46 @@ export const AdminDashboard: React.FC = () => {
     addWebProject,
     updateWebProject,
     deleteWebProject,
+    festivalNights,
+    updateFestivalNight,
+    channelVideos,
+    updateChannelVideo,
+    hasPendingChanges,
+    lastAppliedTime,
+    applyAllChanges,
     resetToDefaults,
     adminActiveTab,
     setAdminActiveTab,
   } = useSiteContent();
 
-  const [activeTab, setActiveTab] = useState<'icon' | 'marquee' | 'brands' | 'webs'>(
+  const [activeTab, setActiveTab] = useState<'icon' | 'marquee' | 'brands' | 'webs' | 'festival'>(
     adminActiveTab || 'icon'
   );
 
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [appliedDetails, setAppliedDetails] = useState<{ timestamp: string; count: number } | null>(null);
 
   const showNotification = (msg: string) => {
     setSavedNotice(msg);
-    setTimeout(() => setSavedNotice(null), 3000);
+    setTimeout(() => setSavedNotice(null), 3500);
+  };
+
+  // Master Apply Changes Handler
+  const handleApplyChanges = () => {
+    setIsApplying(true);
+    setTimeout(() => {
+      const res = applyAllChanges();
+      setIsApplying(false);
+      setAppliedDetails({
+        timestamp: res.timestamp,
+        count: marqueeItems.length + brandLogos.length + webProjects.length + festivalNights.length,
+      });
+      setShowSuccessModal(true);
+      showNotification('✓ ¡Todos los cambios han sido aplicados y guardados con éxito!');
+    }, 400);
   };
 
   // Safe file upload with automatic image compression to avoid quota issues
@@ -63,9 +91,9 @@ export const AdminDashboard: React.FC = () => {
     if (file) {
       try {
         setIsProcessing(true);
-        const compressed = await compressImageFile(file, 1200, 0.8);
+        const compressed = await compressImageFile(file, 1200, 0.85);
         onSuccess(compressed);
-        showNotification('¡Imagen procesada y guardada correctamente!');
+        showNotification('¡Imagen cargada! Presioná "Aplicar Cambios" para publicarla');
       } catch (err) {
         console.error('Error procesando imagen:', err);
         alert('Hubo un problema al procesar la imagen.');
@@ -100,10 +128,10 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-[#040813] text-white flex flex-col font-['Kanit'] selection:bg-[#2A52BE] selection:text-white"
+      className="min-h-screen w-full bg-[#040813] text-white flex flex-col font-['Kanit'] selection:bg-[#2A52BE] selection:text-white pb-20"
     >
       {/* Top Header Bar */}
-      <header className="w-full bg-[#081024] border-b border-[#2A52BE]/40 px-5 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-50 backdrop-blur-lg">
+      <header className="w-full bg-[#081024] border-b border-[#2A52BE]/40 px-5 sm:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-50 backdrop-blur-lg">
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#2A52BE]/20 border border-[#2A52BE] flex items-center justify-center text-[#60A5FA]">
@@ -117,6 +145,11 @@ export const AdminDashboard: React.FC = () => {
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2A52BE] text-white uppercase tracking-wider">
                   Panel Privado
                 </span>
+                {hasPendingChanges && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider animate-pulse">
+                    Cambios sin aplicar
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#94A3B8]">
                 Administración de contenidos, imágenes, marcas y proyectos web
@@ -136,7 +169,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto justify-end">
           <button
             type="button"
             onClick={() => {
@@ -150,9 +183,29 @@ export const AdminDashboard: React.FC = () => {
               }
             }}
             className="px-3 py-2 rounded-xl border border-red-500/30 text-red-300 hover:bg-red-500/20 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Restablecer valores de fábrica"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Restablecer</span>
+            <span className="hidden md:inline">Restablecer</span>
+          </button>
+
+          {/* BOTÓN APLICAR CAMBIOS PRINCIPAL */}
+          <button
+            type="button"
+            id="admin-header-apply-button"
+            onClick={handleApplyChanges}
+            disabled={isApplying}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg cursor-pointer ${
+              hasPendingChanges
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-extrabold shadow-emerald-500/30 scale-105 animate-pulse'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+            }`}
+          >
+            <Check className="w-4 h-4 stroke-[2.5]" />
+            <span>{isApplying ? 'Aplicando...' : 'Aplicar Cambios'}</span>
+            {hasPendingChanges && (
+              <span className="w-2 h-2 rounded-full bg-black animate-ping" />
+            )}
           </button>
 
           <button
@@ -161,7 +214,7 @@ export const AdminDashboard: React.FC = () => {
             className="px-4 py-2 rounded-xl bg-[#2A52BE] hover:bg-[#3870E0] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg hover:scale-105 cursor-pointer"
           >
             <Eye className="w-4 h-4" />
-            <span>Ver Sitio Web en Vivo</span>
+            <span>Ver Sitio en Vivo</span>
           </button>
         </div>
       </header>
@@ -172,20 +225,20 @@ export const AdminDashboard: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('icon')}
-            className={`flex items-center gap-2 px-5 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'icon'
                 ? 'border-[#3870E0] text-white bg-[#0E1A38]'
                 : 'border-transparent text-[#94A3B8] hover:text-white'
             }`}
           >
             <ImageIcon className="w-4 h-4 text-[#3870E0]" />
-            <span>1. Ícono & Logo Web</span>
+            <span>1. Ícono & Logos Web</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('marquee')}
-            className={`flex items-center gap-2 px-5 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'marquee'
                 ? 'border-[#3870E0] text-white bg-[#0E1A38]'
                 : 'border-transparent text-[#94A3B8] hover:text-white'
@@ -198,7 +251,7 @@ export const AdminDashboard: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('brands')}
-            className={`flex items-center gap-2 px-5 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'brands'
                 ? 'border-[#3870E0] text-white bg-[#0E1A38]'
                 : 'border-transparent text-[#94A3B8] hover:text-white'
@@ -211,7 +264,7 @@ export const AdminDashboard: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('webs')}
-            className={`flex items-center gap-2 px-5 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'webs'
                 ? 'border-[#3870E0] text-white bg-[#0E1A38]'
                 : 'border-transparent text-[#94A3B8] hover:text-white'
@@ -219,6 +272,19 @@ export const AdminDashboard: React.FC = () => {
           >
             <Globe className="w-4 h-4 text-[#3870E0]" />
             <span>4. Webs Desarrolladas ({webProjects.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('festival')}
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'festival'
+                ? 'border-[#3870E0] text-white bg-[#0E1A38]'
+                : 'border-transparent text-[#94A3B8] hover:text-white'
+            }`}
+          >
+            <Film className="w-4 h-4 text-[#3870E0]" />
+            <span>5. Festival & Coberturas ({festivalNights.length})</span>
           </button>
         </div>
       </div>
@@ -862,7 +928,314 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* TAB 5: FESTIVAL PLAYAS DORADAS 2026 & COBERTURAS */}
+        {activeTab === 'festival' && (
+          <div className="space-y-6">
+            <div className="bg-[#0A1226] border border-[#2A52BE]/40 rounded-3xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-bold uppercase text-white tracking-wide mb-1">
+                    Fiesta Nacional de Playas Doradas 2026 & Coberturas
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#CBD5E1]">
+                    Administrá las miniaturas de portada, títulos y enlaces directos de YouTube para las 3 noches de transmisión en vivo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleApplyChanges}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                >
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>Aplicar Cambios</span>
+                </button>
+              </div>
+
+              {/* 3 Nights Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+                {festivalNights.map((night, idx) => (
+                  <div
+                    key={night.night}
+                    className="p-5 rounded-2xl bg-[#060D1E] border border-[#2A52BE]/30 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase bg-[#2A52BE] text-white">
+                          {night.night}
+                        </span>
+                        <span className="text-[10px] text-[#60A5FA] uppercase tracking-wider font-semibold">
+                          {night.badge || 'Transmisión Oficial'}
+                        </span>
+                      </div>
+
+                      {/* Thumbnail Preview with instant upload */}
+                      <div className="relative w-full h-40 rounded-xl overflow-hidden bg-[#02050D] border border-[#2A52BE]/40 mb-3 group">
+                        <img
+                          src={night.thumbnail}
+                          alt={night.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-opacity">
+                          <Upload className="w-5 h-5 text-white" />
+                          <span className="text-[11px] text-white uppercase font-bold tracking-wider">
+                            Subir Nueva Portada
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleFileUpload(e, (dataUrl) =>
+                                updateFestivalNight(idx, { thumbnail: dataUrl })
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+
+                      <div className="space-y-2 mb-3">
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-[#93C5FD] font-semibold block mb-1">
+                            Título del Evento / Noche
+                          </label>
+                          <input
+                            type="text"
+                            value={night.title}
+                            onChange={(e) => updateFestivalNight(idx, { title: e.target.value })}
+                            className="w-full bg-[#040813] border border-[#2A52BE]/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#3870E0]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-[#93C5FD] font-semibold block mb-1">
+                            Enlace YouTube Live
+                          </label>
+                          <input
+                            type="url"
+                            value={night.url}
+                            onChange={(e) => {
+                              const newUrl = e.target.value;
+                              const match = newUrl.match(/(?:live\/|v=|youtu\.be\/)([\w-]+)/);
+                              const newId = match ? match[1] : night.youtubeId;
+                              updateFestivalNight(idx, { url: newUrl, youtubeId: newId });
+                            }}
+                            className="w-full bg-[#040813] border border-[#2A52BE]/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#3870E0]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-[#93C5FD] font-semibold block mb-1">
+                            URL Imagen Portada
+                          </label>
+                          <input
+                            type="url"
+                            value={night.thumbnail}
+                            onChange={(e) =>
+                              updateFestivalNight(idx, { thumbnail: e.target.value })
+                            }
+                            className="w-full bg-[#040813] border border-[#2A52BE]/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#3870E0]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                      <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#14234C] hover:bg-[#2A52BE] text-white text-xs font-semibold cursor-pointer transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-[#60A5FA]" />
+                        <span>Subir Portada</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) =>
+                            handleFileUpload(e, (dataUrl) =>
+                              updateFestivalNight(idx, { thumbnail: dataUrl })
+                            )
+                          }
+                        />
+                      </label>
+                      <a
+                        href={night.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-[#60A5FA] hover:underline flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Ver en YouTube</span>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* YouTube Channel Section */}
+              <div className="border-t border-[#2A52BE]/30 pt-6">
+                <h4 className="text-sm font-bold uppercase text-white tracking-wide mb-3 flex items-center gap-2">
+                  <Film className="w-4 h-4 text-[#3870E0]" />
+                  <span>Canal Oficial de YouTube (@elmancasg)</span>
+                </h4>
+                <p className="text-xs text-[#CBD5E1] mb-4">
+                  Videos y producciones vinculadas a la sección de streaming de la productora.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {channelVideos.map((video) => (
+                    <div
+                      key={video.id}
+                      className="p-4 rounded-xl bg-[#060D1E] border border-[#2A52BE]/30 flex flex-col justify-between"
+                    >
+                      <div className="relative w-full h-32 rounded-lg overflow-hidden bg-[#02050D] mb-2 group">
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                          <Upload className="w-4 h-4 text-white mr-1" />
+                          <span className="text-xs text-white uppercase font-bold">Cambiar Foto</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleFileUpload(e, (dataUrl) =>
+                                updateChannelVideo(video.id, { thumbnail: dataUrl })
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+                      <input
+                        type="text"
+                        value={video.title}
+                        onChange={(e) => updateChannelVideo(video.id, { title: e.target.value })}
+                        className="w-full bg-[#040813] border border-[#2A52BE]/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#3870E0] mb-2"
+                        title="Título del video"
+                      />
+                      <span className="text-[10px] text-[#94A3B8]">ID: {video.youtubeId}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Persistent Bottom Action Dock with Functional Apply Changes Button */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 w-full bg-[#070D1E]/95 backdrop-blur-lg border-t border-[#2A52BE]/40 px-5 sm:px-8 py-3.5 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span
+              className={`w-3 h-3 rounded-full shrink-0 ${
+                hasPendingChanges ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
+              }`}
+            />
+            <div className="flex flex-col">
+              <span className="text-xs text-white font-semibold tracking-wide">
+                {hasPendingChanges
+                  ? 'Hay modificaciones pendientes. Tocá "Aplicar Cambios" para publicarlas en la web.'
+                  : lastAppliedTime
+                  ? `Todos los cambios están aplicados a la web pública (Guardado a las ${lastAppliedTime}).`
+                  : 'Todos los contenidos y fotos están sincronizados con la web pública.'}
+              </span>
+              <span className="text-[11px] text-[#93C5FD]">
+                Las imágenes, logos y marcas se guardan de forma permanente y segura en tu navegador.
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            {/* BOTÓN APLICAR CAMBIOS PRINCIPAL INFERIOR */}
+            <button
+              type="button"
+              id="admin-bottom-apply-button"
+              onClick={handleApplyChanges}
+              disabled={isApplying}
+              className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-105 cursor-pointer"
+            >
+              <Check className="w-4 h-4 text-black stroke-[3]" />
+              <span>{isApplying ? 'Aplicando Cambios...' : 'Aplicar Cambios'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={navigateToPublic}
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#14234C] hover:bg-[#1E3575] text-[#93C5FD] hover:text-white font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 border border-[#2A52BE]/50 transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Ver Web en Vivo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Confirmation Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0A1329] border-2 border-[#2A52BE] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_0_60px_rgba(42,82,190,0.6)] text-center relative">
+            <button
+              type="button"
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-[#94A3B8] hover:text-white hover:bg-white/10 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 mx-auto flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/20">
+              <Check className="w-8 h-8 stroke-[3]" />
+            </div>
+
+            <h3 className="text-xl font-bold uppercase tracking-wide text-white mb-2 font-['Kanit']">
+              ¡Cambios Aplicados con Éxito!
+            </h3>
+            <p className="text-xs sm:text-sm text-[#CBD5E1] mb-6">
+              Todas las imágenes, logos oficiales, carruseles y proyectos han sido guardados y publicados. Tu sitio web público está 100% actualizado en este momento.
+            </p>
+
+            {appliedDetails && (
+              <div className="bg-[#050B19] rounded-xl p-3 border border-[#2A52BE]/40 mb-6 text-left space-y-1.5 text-xs">
+                <div className="flex justify-between text-[#93C5FD]">
+                  <span>Hora de aplicación:</span>
+                  <span className="text-white font-mono font-bold">{appliedDetails.timestamp}</span>
+                </div>
+                <div className="flex justify-between text-[#93C5FD]">
+                  <span>Elementos sincronizados:</span>
+                  <span className="text-emerald-400 font-mono font-bold">
+                    {appliedDetails.count} activos
+                  </span>
+                </div>
+                <div className="flex justify-between text-[#93C5FD]">
+                  <span>Estado:</span>
+                  <span className="text-emerald-300 font-bold">En Línea / Publicado</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  navigateToPublic();
+                }}
+                className="flex-1 px-5 py-3 rounded-xl bg-[#2A52BE] hover:bg-[#3870E0] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-[#2A52BE]/40 cursor-pointer"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Ver Sitio Web en Vivo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-[#CBD5E1] hover:text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                Seguir Editando
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

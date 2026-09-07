@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MarqueeItem, BrandItem, WebProjectItem, ChannelVideoItem } from '../types';
+import { MarqueeItem, BrandItem, WebProjectItem, ChannelVideoItem, FestivalNightItem } from '../types';
 import { safeStorage } from '../utils/imageCompressor';
 
 interface SiteContentState {
@@ -36,17 +36,56 @@ interface SiteContentState {
   updateWebProject: (id: string, updated: Partial<WebProjectItem>) => void;
   deleteWebProject: (id: string) => void;
 
+  // Festival Nights (Playas Doradas 2026)
+  festivalNights: FestivalNightItem[];
+  setFestivalNights: React.Dispatch<React.SetStateAction<FestivalNightItem[]>>;
+  updateFestivalNight: (index: number, updated: Partial<FestivalNightItem>) => void;
+
   // Channel Videos (@elmancasg)
   channelVideos: ChannelVideoItem[];
   setChannelVideos: React.Dispatch<React.SetStateAction<ChannelVideoItem[]>>;
+  updateChannelVideo: (id: string, updated: Partial<ChannelVideoItem>) => void;
+
+  // Apply changes mechanism
+  hasPendingChanges: boolean;
+  setHasPendingChanges: (val: boolean) => void;
+  lastAppliedTime: string | null;
+  applyAllChanges: () => { success: boolean; message: string; timestamp: string };
 
   // Reset to default
   resetToDefaults: () => void;
 
   // Active admin tab
-  adminActiveTab: 'icon' | 'marquee' | 'brands' | 'webs';
-  setAdminActiveTab: (tab: 'icon' | 'marquee' | 'brands' | 'webs') => void;
+  adminActiveTab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival';
+  setAdminActiveTab: (tab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival') => void;
 }
+
+const defaultFestivalNights: FestivalNightItem[] = [
+  {
+    night: 'Noche 1',
+    title: 'Apertura & Escenario Principal',
+    youtubeId: 'QMQ4kJgnf0M',
+    url: 'https://www.youtube.com/live/QMQ4kJgnf0M?si=u7LGmLoHpSz_uQM1',
+    thumbnail: 'https://i.ytimg.com/vi/QMQ4kJgnf0M/hqdefault.jpg',
+    badge: 'Transmisión Oficial Noche 1',
+  },
+  {
+    night: 'Noche 2',
+    title: 'Artistas, Shows & Cobertura',
+    youtubeId: '6sBlnahh6Y4',
+    url: 'https://www.youtube.com/live/6sBlnahh6Y4?si=HVbcGwsiHIRzuAfj',
+    thumbnail: 'https://i.ytimg.com/vi/6sBlnahh6Y4/hqdefault.jpg',
+    badge: 'Transmisión Oficial Noche 2',
+  },
+  {
+    night: 'Noche 3',
+    title: 'Gran Cierre del Festival',
+    youtubeId: 'dHIYvORgujw',
+    url: 'https://www.youtube.com/live/dHIYvORgujw?si=J7qhGi9FixakN2CB',
+    thumbnail: 'https://i.ytimg.com/vi/dHIYvORgujw/hqdefault.jpg',
+    badge: 'Transmisión Oficial Noche 3',
+  },
+];
 
 const defaultMarqueeItems: MarqueeItem[] = [
   {
@@ -244,7 +283,9 @@ function checkIsAdminUrl(): boolean {
 export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Admin Route state
   const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminUrl());
-  const [adminActiveTab, setAdminActiveTab] = useState<'icon' | 'marquee' | 'brands' | 'webs'>('icon');
+  const [adminActiveTab, setAdminActiveTab] = useState<
+    'icon' | 'marquee' | 'brands' | 'webs' | 'festival'
+  >('icon');
 
   // Watch for URL changes (popstate and hashchange)
   useEffect(() => {
@@ -283,8 +324,14 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return safeStorage.get<string | null>('manca_footer_logo', null);
   });
 
+  const [hasPendingChanges, setHasPendingChanges] = useState<boolean>(false);
+  const [lastAppliedTime, setLastAppliedTime] = useState<string | null>(() => {
+    return safeStorage.get<string | null>('manca_last_applied_time', null);
+  });
+
   const setCustomFooterLogoUrl = (url: string | null) => {
     setCustomFooterLogoUrlState(url);
+    setHasPendingChanges(true);
     if (url) {
       safeStorage.set('manca_footer_logo', url);
     } else {
@@ -304,13 +351,18 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return safeStorage.get<WebProjectItem[]>('manca_web_projects', defaultWebProjects);
   });
 
-  const [channelVideos, setChannelVideos] = useState<ChannelVideoItem[]>(() => {
+  const [festivalNights, setFestivalNightsState] = useState<FestivalNightItem[]>(() => {
+    return safeStorage.get<FestivalNightItem[]>('manca_festival_nights', defaultFestivalNights);
+  });
+
+  const [channelVideos, setChannelVideosState] = useState<ChannelVideoItem[]>(() => {
     return safeStorage.get<ChannelVideoItem[]>('manca_channel_videos', defaultChannelVideos);
   });
 
   // Sync favicon if icon changed
   const setCustomIconUrl = (url: string | null) => {
     setCustomIconUrlState(url);
+    setHasPendingChanges(true);
     if (url) {
       safeStorage.set('manca_custom_icon', url);
       const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -321,6 +373,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const setMarqueeItems: React.Dispatch<React.SetStateAction<MarqueeItem[]>> = (val) => {
+    setHasPendingChanges(true);
     setMarqueeItemsState((prev) => {
       const next = typeof val === 'function' ? val(prev) : val;
       safeStorage.set('manca_marquee_items', next);
@@ -329,21 +382,25 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateMarqueeItem = (id: string, updated: Partial<MarqueeItem>) => {
+    setHasPendingChanges(true);
     setMarqueeItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
     );
   };
 
   const addMarqueeItem = (item: Omit<MarqueeItem, 'id'>) => {
+    setHasPendingChanges(true);
     const newItem: MarqueeItem = { ...item, id: `m_${Date.now()}` };
     setMarqueeItems((prev) => [newItem, ...prev]);
   };
 
   const deleteMarqueeItem = (id: string) => {
+    setHasPendingChanges(true);
     setMarqueeItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const setBrandLogos: React.Dispatch<React.SetStateAction<BrandItem[]>> = (val) => {
+    setHasPendingChanges(true);
     setBrandLogosState((prev) => {
       const next = typeof val === 'function' ? val(prev) : val;
       safeStorage.set('manca_brand_logos', next);
@@ -352,15 +409,18 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const addBrandLogo = (brand: Omit<BrandItem, 'id'>) => {
+    setHasPendingChanges(true);
     const newBrand: BrandItem = { ...brand, id: `b_${Date.now()}` };
     setBrandLogos((prev) => [...prev, newBrand]);
   };
 
   const deleteBrandLogo = (id: string) => {
+    setHasPendingChanges(true);
     setBrandLogos((prev) => prev.filter((b) => b.id !== id));
   };
 
   const setWebProjects: React.Dispatch<React.SetStateAction<WebProjectItem[]>> = (val) => {
+    setHasPendingChanges(true);
     setWebProjectsState((prev) => {
       const next = typeof val === 'function' ? val(prev) : val;
       safeStorage.set('manca_web_projects', next);
@@ -369,18 +429,97 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const addWebProject = (project: Omit<WebProjectItem, 'id'>) => {
+    setHasPendingChanges(true);
     const newProj: WebProjectItem = { ...project, id: `w_${Date.now()}` };
     setWebProjects((prev) => [newProj, ...prev]);
   };
 
   const updateWebProject = (id: string, updated: Partial<WebProjectItem>) => {
+    setHasPendingChanges(true);
     setWebProjects((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
     );
   };
 
   const deleteWebProject = (id: string) => {
+    setHasPendingChanges(true);
     setWebProjects((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const setFestivalNights: React.Dispatch<React.SetStateAction<FestivalNightItem[]>> = (val) => {
+    setHasPendingChanges(true);
+    setFestivalNightsState((prev) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      safeStorage.set('manca_festival_nights', next);
+      return next;
+    });
+  };
+
+  const updateFestivalNight = (index: number, updated: Partial<FestivalNightItem>) => {
+    setHasPendingChanges(true);
+    setFestivalNights((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...updated } : item))
+    );
+  };
+
+  const setChannelVideos: React.Dispatch<React.SetStateAction<ChannelVideoItem[]>> = (val) => {
+    setHasPendingChanges(true);
+    setChannelVideosState((prev) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      safeStorage.set('manca_channel_videos', next);
+      return next;
+    });
+  };
+
+  const updateChannelVideo = (id: string, updated: Partial<ChannelVideoItem>) => {
+    setHasPendingChanges(true);
+    setChannelVideos((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
+    );
+  };
+
+  // Master APPLY CHANGES function
+  const applyAllChanges = () => {
+    if (customIconUrl) {
+      safeStorage.set('manca_custom_icon', customIconUrl);
+      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (link) link.href = customIconUrl;
+    } else {
+      safeStorage.remove('manca_custom_icon');
+    }
+
+    if (customFooterLogoUrl) {
+      safeStorage.set('manca_footer_logo', customFooterLogoUrl);
+    } else {
+      safeStorage.remove('manca_footer_logo');
+    }
+
+    safeStorage.set('manca_marquee_items', marqueeItems);
+    safeStorage.set('manca_brand_logos', brandLogos);
+    safeStorage.set('manca_web_projects', webProjects);
+    safeStorage.set('manca_festival_nights', festivalNights);
+    safeStorage.set('manca_channel_videos', channelVideos);
+
+    const now = new Date().toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    safeStorage.set('manca_last_applied_time', now);
+    setLastAppliedTime(now);
+    setHasPendingChanges(false);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('manca_content_applied', { detail: { timestamp: now } })
+      );
+    }
+
+    return {
+      success: true,
+      message: '¡Cambios aplicados con éxito! Todo el sitio web se ha sincronizado.',
+      timestamp: now,
+    };
   };
 
   const resetToDefaults = () => {
@@ -389,13 +528,18 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     safeStorage.remove('manca_marquee_items');
     safeStorage.remove('manca_brand_logos');
     safeStorage.remove('manca_web_projects');
+    safeStorage.remove('manca_festival_nights');
     safeStorage.remove('manca_channel_videos');
+    safeStorage.remove('manca_last_applied_time');
     setCustomIconUrlState(null);
     setCustomFooterLogoUrlState(null);
     setMarqueeItemsState(defaultMarqueeItems);
     setBrandLogosState(defaultBrandLogos);
     setWebProjectsState(defaultWebProjects);
-    setChannelVideos(defaultChannelVideos);
+    setFestivalNightsState(defaultFestivalNights);
+    setChannelVideosState(defaultChannelVideos);
+    setLastAppliedTime(null);
+    setHasPendingChanges(false);
   };
 
   return (
@@ -422,8 +566,16 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
         addWebProject,
         updateWebProject,
         deleteWebProject,
+        festivalNights,
+        setFestivalNights,
+        updateFestivalNight,
         channelVideos,
         setChannelVideos,
+        updateChannelVideo,
+        hasPendingChanges,
+        setHasPendingChanges,
+        lastAppliedTime,
+        applyAllChanges,
         resetToDefaults,
         adminActiveTab,
         setAdminActiveTab,

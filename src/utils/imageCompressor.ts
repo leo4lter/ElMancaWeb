@@ -41,8 +41,14 @@ export async function compressImageFile(file: File, maxDimension = 1200, quality
         }
 
         ctx.drawImage(img, 0, 0, width, height);
-        // Convert to WebP or JPEG for massive reduction (typically 90% smaller)
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        // If PNG, keep PNG or WebP to preserve transparency for logos
+        let outputMime = 'image/jpeg';
+        if (file.type === 'image/png') {
+          outputMime = 'image/png';
+        } else if (file.type === 'image/webp') {
+          outputMime = 'image/webp';
+        }
+        const compressedDataUrl = canvas.toDataURL(outputMime, quality);
         resolve(compressedDataUrl);
       };
       img.onerror = () => resolve(e.target?.result as string);
@@ -70,6 +76,9 @@ export const safeStorage = {
   set: (key: string, value: any): boolean => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('manca_storage_change'));
+      }
       return true;
     } catch (err) {
       console.warn(`Quota exceeded or error writing ${key} to localStorage:`, err);
