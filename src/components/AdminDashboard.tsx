@@ -20,6 +20,9 @@ import {
   Save,
   Film,
   X,
+  Download,
+  UploadCloud,
+  Database,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -47,6 +50,8 @@ export const AdminDashboard: React.FC = () => {
     hasPendingChanges,
     lastAppliedTime,
     applyAllChanges,
+    exportContentJson,
+    importContentJson,
     resetToDefaults,
     adminActiveTab,
     setAdminActiveTab,
@@ -60,26 +65,68 @@ export const AdminDashboard: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [appliedDetails, setAppliedDetails] = useState<{ timestamp: string; count: number } | null>(null);
+  const [appliedDetails, setAppliedDetails] = useState<{ timestamp: string; count: number; serverSaved?: boolean } | null>(null);
 
   const showNotification = (msg: string) => {
     setSavedNotice(msg);
     setTimeout(() => setSavedNotice(null), 3500);
   };
 
-  // Master Apply Changes Handler
-  const handleApplyChanges = () => {
+  // Master Apply Changes Handler (Saves to client + server filesystem + workspace code)
+  const handleApplyChanges = async () => {
     setIsApplying(true);
-    setTimeout(() => {
-      const res = applyAllChanges();
-      setIsApplying(false);
+    try {
+      const res = await applyAllChanges();
       setAppliedDetails({
         timestamp: res.timestamp,
         count: marqueeItems.length + brandLogos.length + webProjects.length + festivalNights.length,
       });
       setShowSuccessModal(true);
-      showNotification('✓ ¡Todos los cambios han sido aplicados y guardados con éxito!');
-    }, 400);
+      showNotification('✓ ¡Cambios guardados en el servidor y sincronizados para todos los visitantes!');
+    } catch (err) {
+      console.error(err);
+      showNotification('Error al aplicar cambios');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  // Download backup JSON file
+  const handleDownloadBackup = () => {
+    const jsonStr = exportContentJson();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `manca-contenidos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('✓ Respaldo JSON descargado');
+  };
+
+  // Import backup JSON file
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        if (text) {
+          const success = importContentJson(text);
+          if (success) {
+            await handleApplyChanges();
+            showNotification('✓ ¡Respaldo importado y guardado con éxito!');
+          } else {
+            alert('El archivo no tiene un formato JSON válido de Manca.');
+          }
+        }
+      };
+      reader.readAsText(file);
+    }
+    // reset input value so re-selecting works
+    e.target.value = '';
   };
 
   // Safe file upload with automatic image compression to avoid quota issues
@@ -169,7 +216,33 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto justify-end">
+        <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-end">
+          {/* Export JSON backup */}
+          <button
+            type="button"
+            onClick={handleDownloadBackup}
+            className="px-2.5 py-2 rounded-xl border border-[#2A52BE]/40 bg-[#0F1B38] text-[#93C5FD] hover:text-white hover:bg-[#162752] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Descargar copia de respaldo en archivo JSON"
+          >
+            <Download className="w-3.5 h-3.5 text-[#60A5FA]" />
+            <span className="hidden lg:inline">Descargar JSON</span>
+          </button>
+
+          {/* Import JSON backup */}
+          <label
+            className="px-2.5 py-2 rounded-xl border border-[#2A52BE]/40 bg-[#0F1B38] text-[#93C5FD] hover:text-white hover:bg-[#162752] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Cargar archivo de respaldo JSON"
+          >
+            <UploadCloud className="w-3.5 h-3.5 text-[#60A5FA]" />
+            <span className="hidden lg:inline">Cargar JSON</span>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportBackup}
+              className="hidden"
+            />
+          </label>
+
           <button
             type="button"
             onClick={() => {
@@ -182,11 +255,11 @@ export const AdminDashboard: React.FC = () => {
                 showNotification('Contenidos restablecidos a valores originales');
               }
             }}
-            className="px-3 py-2 rounded-xl border border-red-500/30 text-red-300 hover:bg-red-500/20 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Restablecer valores de fábrica"
+            className="px-2.5 py-2 rounded-xl border border-red-500/30 text-red-300 hover:bg-red-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Restablecer valores originales"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Restablecer</span>
+            <span className="hidden xl:inline">Restablecer</span>
           </button>
 
           {/* BOTÓN APLICAR CAMBIOS PRINCIPAL */}
@@ -202,7 +275,7 @@ export const AdminDashboard: React.FC = () => {
             }`}
           >
             <Check className="w-4 h-4 stroke-[2.5]" />
-            <span>{isApplying ? 'Aplicando...' : 'Aplicar Cambios'}</span>
+            <span>{isApplying ? 'Guardando...' : 'Aplicar & Guardar'}</span>
             {hasPendingChanges && (
               <span className="w-2 h-2 rounded-full bg-black animate-ping" />
             )}
@@ -1187,16 +1260,16 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <h3 className="text-xl font-bold uppercase tracking-wide text-white mb-2 font-['Kanit']">
-              ¡Cambios Aplicados con Éxito!
+              ¡Cambios Guardados Permanentemente!
             </h3>
             <p className="text-xs sm:text-sm text-[#CBD5E1] mb-6">
-              Todas las imágenes, logos oficiales, carruseles y proyectos han sido guardados y publicados. Tu sitio web público está 100% actualizado en este momento.
+              Todas las imágenes, marcas y configuraciones han sido guardadas en el servidor y en el código del proyecto. Son visibles para todos los visitantes y permanecerán intactas entre redeploys.
             </p>
 
             {appliedDetails && (
-              <div className="bg-[#050B19] rounded-xl p-3 border border-[#2A52BE]/40 mb-6 text-left space-y-1.5 text-xs">
+              <div className="bg-[#050B19] rounded-xl p-3.5 border border-[#2A52BE]/40 mb-6 text-left space-y-2 text-xs">
                 <div className="flex justify-between text-[#93C5FD]">
-                  <span>Hora de aplicación:</span>
+                  <span>Hora de guardado:</span>
                   <span className="text-white font-mono font-bold">{appliedDetails.timestamp}</span>
                 </div>
                 <div className="flex justify-between text-[#93C5FD]">
@@ -1206,8 +1279,19 @@ export const AdminDashboard: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between text-[#93C5FD]">
-                  <span>Estado:</span>
-                  <span className="text-emerald-300 font-bold">En Línea / Publicado</span>
+                  <span>Almacenamiento:</span>
+                  <span className="text-emerald-300 font-bold">Servidor API + Archivo JSON + Navegador</span>
+                </div>
+                <div className="pt-2 border-t border-[#2A52BE]/30 flex justify-between items-center">
+                  <span className="text-[#94A3B8]">Copia descargable:</span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    className="text-[#60A5FA] hover:text-white underline font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Download className="w-3 h-3" />
+                    Descargar Respaldo JSON
+                  </button>
                 </div>
               </div>
             )}

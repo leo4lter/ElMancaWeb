@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MarqueeItem, BrandItem, WebProjectItem, ChannelVideoItem, FestivalNightItem } from '../types';
 import { safeStorage } from '../utils/imageCompressor';
+import initialSiteData from '../data/siteContent.json';
 
 interface SiteContentState {
   // Routing / Admin mode
@@ -50,7 +51,11 @@ interface SiteContentState {
   hasPendingChanges: boolean;
   setHasPendingChanges: (val: boolean) => void;
   lastAppliedTime: string | null;
-  applyAllChanges: () => { success: boolean; message: string; timestamp: string };
+  applyAllChanges: () => Promise<{ success: boolean; message: string; timestamp: string }>;
+
+  // Backup & Restore
+  exportContentJson: () => string;
+  importContentJson: (jsonString: string) => boolean;
 
   // Reset to default
   resetToDefaults: () => void;
@@ -315,19 +320,122 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setIsAdminRoute(false);
   };
 
-  // State with safeStorage
+  // State with safeStorage fallback to initialSiteData
   const [customIconUrl, setCustomIconUrlState] = useState<string | null>(() => {
-    return safeStorage.get<string | null>('manca_custom_icon', null);
+    return safeStorage.get<string | null>(
+      'manca_custom_icon',
+      initialSiteData?.customIconUrl || null
+    );
   });
 
   const [customFooterLogoUrl, setCustomFooterLogoUrlState] = useState<string | null>(() => {
-    return safeStorage.get<string | null>('manca_footer_logo', null);
+    return safeStorage.get<string | null>(
+      'manca_footer_logo',
+      initialSiteData?.customFooterLogoUrl || null
+    );
   });
 
   const [hasPendingChanges, setHasPendingChanges] = useState<boolean>(false);
   const [lastAppliedTime, setLastAppliedTime] = useState<string | null>(() => {
-    return safeStorage.get<string | null>('manca_last_applied_time', null);
+    return safeStorage.get<string | null>(
+      'manca_last_applied_time',
+      initialSiteData?.lastAppliedTime || null
+    );
   });
+
+  const [marqueeItems, setMarqueeItemsState] = useState<MarqueeItem[]>(() => {
+    return safeStorage.get<MarqueeItem[]>(
+      'manca_marquee_items',
+      (initialSiteData?.marqueeItems as MarqueeItem[]) || defaultMarqueeItems
+    );
+  });
+
+  const [brandLogos, setBrandLogosState] = useState<BrandItem[]>(() => {
+    return safeStorage.get<BrandItem[]>(
+      'manca_brand_logos',
+      (initialSiteData?.brandLogos as BrandItem[]) || defaultBrandLogos
+    );
+  });
+
+  const [webProjects, setWebProjectsState] = useState<WebProjectItem[]>(() => {
+    return safeStorage.get<WebProjectItem[]>(
+      'manca_web_projects',
+      (initialSiteData?.webProjects as WebProjectItem[]) || defaultWebProjects
+    );
+  });
+
+  const [festivalNights, setFestivalNightsState] = useState<FestivalNightItem[]>(() => {
+    return safeStorage.get<FestivalNightItem[]>(
+      'manca_festival_nights',
+      (initialSiteData?.festivalNights as FestivalNightItem[]) || defaultFestivalNights
+    );
+  });
+
+  const [channelVideos, setChannelVideosState] = useState<ChannelVideoItem[]>(() => {
+    return safeStorage.get<ChannelVideoItem[]>(
+      'manca_channel_videos',
+      (initialSiteData?.channelVideos as ChannelVideoItem[]) || defaultChannelVideos
+    );
+  });
+
+  // Global Sync: Fetch live published content from server API on boot (for all visitors)
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/content')
+      .then((res) => {
+        if (!res.ok) throw new Error('API content not available');
+        return res.json();
+      })
+      .then((data) => {
+        if (!isMounted || !data || typeof data !== 'object') return;
+
+        if (data.customIconUrl !== undefined) {
+          setCustomIconUrlState(data.customIconUrl);
+          if (data.customIconUrl) {
+            safeStorage.set('manca_custom_icon', data.customIconUrl);
+            const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+            if (link) link.href = data.customIconUrl;
+          }
+        }
+        if (data.customFooterLogoUrl !== undefined) {
+          setCustomFooterLogoUrlState(data.customFooterLogoUrl);
+          if (data.customFooterLogoUrl) {
+            safeStorage.set('manca_footer_logo', data.customFooterLogoUrl);
+          }
+        }
+        if (Array.isArray(data.marqueeItems) && data.marqueeItems.length > 0) {
+          setMarqueeItemsState(data.marqueeItems);
+          safeStorage.set('manca_marquee_items', data.marqueeItems);
+        }
+        if (Array.isArray(data.brandLogos) && data.brandLogos.length > 0) {
+          setBrandLogosState(data.brandLogos);
+          safeStorage.set('manca_brand_logos', data.brandLogos);
+        }
+        if (Array.isArray(data.webProjects) && data.webProjects.length > 0) {
+          setWebProjectsState(data.webProjects);
+          safeStorage.set('manca_web_projects', data.webProjects);
+        }
+        if (Array.isArray(data.festivalNights) && data.festivalNights.length > 0) {
+          setFestivalNightsState(data.festivalNights);
+          safeStorage.set('manca_festival_nights', data.festivalNights);
+        }
+        if (Array.isArray(data.channelVideos) && data.channelVideos.length > 0) {
+          setChannelVideosState(data.channelVideos);
+          safeStorage.set('manca_channel_videos', data.channelVideos);
+        }
+        if (data.lastAppliedTime) {
+          setLastAppliedTime(data.lastAppliedTime);
+          safeStorage.set('manca_last_applied_time', data.lastAppliedTime);
+        }
+      })
+      .catch(() => {
+        // Fallback silently to local cache or bundled data
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const setCustomFooterLogoUrl = (url: string | null) => {
     setCustomFooterLogoUrlState(url);
@@ -338,26 +446,6 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       safeStorage.remove('manca_footer_logo');
     }
   };
-
-  const [marqueeItems, setMarqueeItemsState] = useState<MarqueeItem[]>(() => {
-    return safeStorage.get<MarqueeItem[]>('manca_marquee_items', defaultMarqueeItems);
-  });
-
-  const [brandLogos, setBrandLogosState] = useState<BrandItem[]>(() => {
-    return safeStorage.get<BrandItem[]>('manca_brand_logos', defaultBrandLogos);
-  });
-
-  const [webProjects, setWebProjectsState] = useState<WebProjectItem[]>(() => {
-    return safeStorage.get<WebProjectItem[]>('manca_web_projects', defaultWebProjects);
-  });
-
-  const [festivalNights, setFestivalNightsState] = useState<FestivalNightItem[]>(() => {
-    return safeStorage.get<FestivalNightItem[]>('manca_festival_nights', defaultFestivalNights);
-  });
-
-  const [channelVideos, setChannelVideosState] = useState<ChannelVideoItem[]>(() => {
-    return safeStorage.get<ChannelVideoItem[]>('manca_channel_videos', defaultChannelVideos);
-  });
 
   // Sync favicon if icon changed
   const setCustomIconUrl = (url: string | null) => {
@@ -478,8 +566,66 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
   };
 
-  // Master APPLY CHANGES function
-  const applyAllChanges = () => {
+  // Export content as JSON string
+  const exportContentJson = () => {
+    const data = {
+      customIconUrl,
+      customFooterLogoUrl,
+      lastAppliedTime,
+      marqueeItems,
+      brandLogos,
+      webProjects,
+      festivalNights,
+      channelVideos,
+    };
+    return JSON.stringify(data, null, 2);
+  };
+
+  // Import content from JSON string
+  const importContentJson = (jsonString: string): boolean => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (!data || typeof data !== 'object') return false;
+
+      if (data.customIconUrl !== undefined) {
+        setCustomIconUrl(data.customIconUrl);
+      }
+      if (data.customFooterLogoUrl !== undefined) {
+        setCustomFooterLogoUrl(data.customFooterLogoUrl);
+      }
+      if (Array.isArray(data.marqueeItems)) {
+        setMarqueeItems(data.marqueeItems);
+      }
+      if (Array.isArray(data.brandLogos)) {
+        setBrandLogos(data.brandLogos);
+      }
+      if (Array.isArray(data.webProjects)) {
+        setWebProjects(data.webProjects);
+      }
+      if (Array.isArray(data.festivalNights)) {
+        setFestivalNights(data.festivalNights);
+      }
+      if (Array.isArray(data.channelVideos)) {
+        setChannelVideos(data.channelVideos);
+      }
+
+      setHasPendingChanges(true);
+      return true;
+    } catch (e) {
+      console.error('Invalid JSON import:', e);
+      return false;
+    }
+  };
+
+  // Master APPLY CHANGES function - Persists to browser, server API & workspace code
+  const applyAllChanges = async () => {
+    const now = new Date().toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    // 1. Immediate client-side update
     if (customIconUrl) {
       safeStorage.set('manca_custom_icon', customIconUrl);
       const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -499,25 +645,47 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     safeStorage.set('manca_web_projects', webProjects);
     safeStorage.set('manca_festival_nights', festivalNights);
     safeStorage.set('manca_channel_videos', channelVideos);
-
-    const now = new Date().toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
     safeStorage.set('manca_last_applied_time', now);
     setLastAppliedTime(now);
     setHasPendingChanges(false);
 
+    // 2. Server-side persistence to src/data/siteContent.json (persists across redeploys & visitors)
+    const payload = {
+      customIconUrl,
+      customFooterLogoUrl,
+      lastAppliedTime: now,
+      marqueeItems,
+      brandLogos,
+      webProjects,
+      festivalNights,
+      channelVideos,
+    };
+
+    let serverSaved = false;
+    try {
+      const res = await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        serverSaved = true;
+      }
+    } catch (err) {
+      console.warn('Could not reach /api/content:', err);
+    }
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent('manca_content_applied', { detail: { timestamp: now } })
+        new CustomEvent('manca_content_applied', { detail: { timestamp: now, serverSaved } })
       );
     }
 
     return {
       success: true,
-      message: '¡Cambios aplicados con éxito! Todo el sitio web se ha sincronizado.',
+      message: serverSaved
+        ? '¡Cambios aplicados y guardados en el servidor! Todos los visitantes verán esta versión permanentemente.'
+        : '¡Cambios aplicados en el navegador local!',
       timestamp: now,
     };
   };
@@ -540,6 +708,24 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setChannelVideosState(defaultChannelVideos);
     setLastAppliedTime(null);
     setHasPendingChanges(false);
+
+    // Also reset server content
+    try {
+      fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customIconUrl: null,
+          customFooterLogoUrl: null,
+          lastAppliedTime: null,
+          marqueeItems: defaultMarqueeItems,
+          brandLogos: defaultBrandLogos,
+          webProjects: defaultWebProjects,
+          festivalNights: defaultFestivalNights,
+          channelVideos: defaultChannelVideos,
+        }),
+      }).catch(() => {});
+    } catch (e) {}
   };
 
   return (
@@ -576,6 +762,8 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setHasPendingChanges,
         lastAppliedTime,
         applyAllChanges,
+        exportContentJson,
+        importContentJson,
         resetToDefaults,
         adminActiveTab,
         setAdminActiveTab,

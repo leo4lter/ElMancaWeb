@@ -1,0 +1,209 @@
+{
+  "customIconUrl": null,
+  "customFooterLogoUrl": null,
+  "lastAppliedTime": null,
+  "marqueeItems": [
+    {
+      "id": "m1",
+      "title": "Fiesta Nacional de Playas Doradas 2026",
+      "category": "Streaming de Gran Escala",
+      "image": "https://i.ytimg.com/vi/QMQ4kJgnf0M/hqdefault.jpg",
+      "tag": "Noches en Vivo 1, 2 y 3"
+    },
+    {
+      "id": "m2",
+      "title": "Transmisión Multicámara en Directo",
+      "category": "Producción & Broadcast",
+      "image": "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=800&q=80",
+      "tag": "Calidad Broadcast HD"
+    },
+    {
+      "id": "m3",
+      "title": "Radio Municipal & Estudios",
+      "category": "Audio & Streaming",
+      "image": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
+      "tag": "Sonido & Enlace Digital"
+    },
+    {
+      "id": "m4",
+      "title": "El Canal: Deportes Locales @elmancasg",
+      "category": "Impacto Comunitario",
+      "image": "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80",
+      "tag": "Visibilidad a Jóvenes Talentos"
+    },
+    {
+      "id": "m5",
+      "title": "Diseño Web Integral con Hosting",
+      "category": "Agencia Digital 360",
+      "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+      "tag": "Web + Dominio + Webmail"
+    },
+    {
+      "id": "m6",
+      "title": "Publicidad Audiovisual (4 videos/mes)",
+      "category": "Contenido Comercial",
+      "image": "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80",
+      "tag": "Promoción $200.000"
+    },
+    {
+      "id": "m7",
+      "title": "Historias que Inspiran a Nuestra Comunidad",
+      "category": "El Canal Comunitario",
+      "image": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+      "tag": "Referentes para Niños & Jóvenes"
+    },
+    {
+      "id": "m8",
+      "title": "Planes de Sponsor & Banners en Pantalla",
+      "category": "Patrocinio en Video",
+      "image": "https://images.unsplash.com/photo-1551818255-e6e10975bc17?auto=format&fit=crop&w=800&q=80",
+      "tag": "Menciones & Presencia de Marca"
+    }
+  ],
+  "brandLogos": [
+    {
+      "id": "b1",
+      "name": "Fiesta Nacional de Playas Doradas",
+      "logo": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Evento Oficial"
+    },
+    {
+      "id": "b2",
+      "name": "Radio Municipal Sierra Grande",
+      "logo": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Medio Aliado"
+    },
+    {
+      "id": "b3",
+      "name": "Municipalidad Sierra Grande",
+      "logo": "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Institucional"
+    },
+    {
+      "id": "b4",
+      "name": "Club Atlético Comunitario",
+      "logo": "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Deportes"
+    },
+    {
+      "id": "b5",
+      "name": "Comercio & Empresa Regional",
+      "logo": "https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Comercio Local"
+    },
+    {
+      "id": "b6",
+      "name": "Parador & Turismo Playas",
+      "logo": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Turismo"
+    },
+    {
+      "id": "b7",
+      "name": "Distribuidora Costa Atlántica",
+      "logo": "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=240&h=120&q=80",
+      "category": "Sponsor Oficial"
+    }
+  ],
+  "webProjects": [
+    {
+      "id": "w1",
+      "title": "Portal Playas Doradas Turismo & Hospedajes",
+      "client": "Secretaría de Turismo & Paradores",
+      "thumbnail": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+      "liveUrl": "#",
+      "tag": "Web Responsive + Webmail",
+      "description": "Guía interactiva de balnearios, reservas y eventos con dominio oficial y hosting de alta velocidad."
+    },
+    {
+      "id": "w2",
+      "title": "Comercio Digital & Catálogo Sierra Grande",
+      "client": "Red de Comercios Regionales",
+      "thumbnail": "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80",
+      "liveUrl": "#",
+      "tag": "E-commerce & WhatsApp",
+      "description": "Catálogo autogestionable con integración a WhatsApp Business para pedidos y consultas directas."
+    },
+    {
+      "id": "w3",
+      "title": "Radio Municipal Streaming & Noticias Web",
+      "client": "Emisora Municipal FM",
+      "thumbnail": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
+      "liveUrl": "#",
+      "tag": "Streaming Audio Player + Noticias",
+      "description": "Plataforma web con reproductor de radio en vivo las 24 hs, podcasts y noticias locales actualizadas."
+    },
+    {
+      "id": "w4",
+      "title": "Portal de Eventos & Coberturas Comunitarias",
+      "client": "Manca Productora",
+      "thumbnail": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
+      "liveUrl": "#",
+      "tag": "Plataforma Multimedia",
+      "description": "Transmisiones en vivo, galerías de fotos de alta resolución y archivo de transmisiones pasadas."
+    }
+  ],
+  "festivalNights": [
+    {
+      "night": "Noche 1",
+      "title": "Apertura & Escenario Principal",
+      "youtubeId": "QMQ4kJgnf0M",
+      "url": "https://www.youtube.com/live/QMQ4kJgnf0M?si=u7LGmLoHpSz_uQM1",
+      "thumbnail": "https://i.ytimg.com/vi/QMQ4kJgnf0M/hqdefault.jpg",
+      "badge": "Transmisión Oficial Noche 1"
+    },
+    {
+      "night": "Noche 2",
+      "title": "Artistas, Shows & Cobertura",
+      "youtubeId": "6sBlnahh6Y4",
+      "url": "https://www.youtube.com/live/6sBlnahh6Y4?si=HVbcGwsiHIRzuAfj",
+      "thumbnail": "https://i.ytimg.com/vi/6sBlnahh6Y4/hqdefault.jpg",
+      "badge": "Transmisión Oficial Noche 2"
+    },
+    {
+      "night": "Noche 3",
+      "title": "Gran Cierre del Festival",
+      "youtubeId": "dHIYvORgujw",
+      "url": "https://www.youtube.com/live/dHIYvORgujw?si=J7qhGi9FixakN2CB",
+      "thumbnail": "https://i.ytimg.com/vi/dHIYvORgujw/hqdefault.jpg",
+      "badge": "Transmisión Oficial Noche 3"
+    }
+  ],
+  "channelVideos": [
+    {
+      "id": "v1",
+      "title": "Fiesta Nacional de Playas Doradas 2026 - Noche 1 en Vivo",
+      "youtubeId": "QMQ4kJgnf0M",
+      "thumbnail": "https://i.ytimg.com/vi/QMQ4kJgnf0M/hqdefault.jpg",
+      "views": "Transmisión Oficial",
+      "duration": "En Vivo",
+      "date": "Playas Doradas 2026"
+    },
+    {
+      "id": "v2",
+      "title": "Fiesta Nacional de Playas Doradas 2026 - Noche 2 en Vivo",
+      "youtubeId": "6sBlnahh6Y4",
+      "thumbnail": "https://i.ytimg.com/vi/6sBlnahh6Y4/hqdefault.jpg",
+      "views": "Transmisión Oficial",
+      "duration": "En Vivo",
+      "date": "Playas Doradas 2026"
+    },
+    {
+      "id": "v3",
+      "title": "Fiesta Nacional de Playas Doradas 2026 - Noche 3 en Vivo",
+      "youtubeId": "dHIYvORgujw",
+      "thumbnail": "https://i.ytimg.com/vi/dHIYvORgujw/hqdefault.jpg",
+      "views": "Transmisión Oficial",
+      "duration": "En Vivo",
+      "date": "Playas Doradas 2026"
+    },
+    {
+      "id": "v4",
+      "title": "Historias de Nuestro Deporte: Jóvenes Referentes Locales",
+      "youtubeId": "elmancasg-deportes",
+      "thumbnail": "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80",
+      "views": "Comunidad & Pasión",
+      "duration": "14:20",
+      "date": "El Canal @elmancasg"
+    }
+  ]
+}
