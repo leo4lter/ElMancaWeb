@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Send, CheckCircle2, Sparkles, Phone, MessageSquare, Clock } from 'lucide-react';
+import { X, Mail, Send, CheckCircle2, Sparkles, Phone, MessageSquare, Clock, MessageCircle } from 'lucide-react';
 import { ContactButton } from './ContactButton';
 import { MancaCircularIcon } from './MancaBrand';
 
@@ -78,24 +78,44 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                 Contanos tu evento, negocio, comercio o idea. Te responderemos con una propuesta a tu medida.
               </p>
 
-              {/* Direct channels banner */}
-              <div className="flex flex-wrap items-center gap-2.5 mt-3 pt-3 border-t border-[#2A52BE]/30">
+              {/* Direct WhatsApp Call-to-Action */}
+              <div className="mt-4 p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                    <MessageCircle className="w-5 h-5 fill-emerald-500/30" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">
+                        Escribinos por WhatsApp
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                        Online
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#94A3B8]">
+                      +54 9 2920 21-4741 • Respuesta directa
+                    </p>
+                  </div>
+                </div>
+
                 <a
                   href="https://wa.me/5492920214741?text=Hola%20Manca%2C%20quisiera%20hacer%20una%20consulta"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 text-xs font-medium transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
                 >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>+54 9 2920 21-4741</span>
+                  <MessageCircle className="w-3.5 h-3.5 fill-black" />
+                  <span>Chatear Ahora</span>
                 </a>
-                <a
-                  href="mailto:contacto@elmanca.com.ar?subject=Consulta%20desde%20la%20web%20Manca"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#14265E] border border-[#2A52BE]/40 text-[#93C5FD] hover:text-white text-xs font-medium transition-colors"
-                >
-                  <Mail className="w-3.5 h-3.5 text-[#60A5FA]" />
-                  <span>contacto@elmanca.com.ar</span>
-                </a>
+              </div>
+
+              <div className="flex items-center gap-3 my-2">
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="text-[11px] uppercase tracking-widest text-[#64748B] font-medium">
+                  O completá el formulario
+                </span>
+                <div className="flex-1 h-px bg-white/10" />
               </div>
             </div>
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSiteContent } from '../context/SiteContentContext';
 import { FadeIn } from './FadeIn';
 import { ServiceItem } from '../types';
 import { Sparkles } from 'lucide-react';
@@ -47,9 +48,11 @@ const pillarsData: ServiceItem[] = [
 ];
 
 export const ServicesSection: React.FC = () => {
+  const { siteTexts } = useSiteContent();
+
   return (
     <section
-      id="services"
+      id="servicios"
       className="relative w-full bg-white text-[#060A14] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-32 pb-24 sm:pb-32 select-none shadow-[0_-20px_50px_rgba(0,0,0,0.5)]"
     >
       <div className="max-w-6xl mx-auto">
@@ -57,7 +60,7 @@ export const ServicesSection: React.FC = () => {
         <FadeIn delay={0} y={20} className="w-full text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#2A52BE]/10 border border-[#2A52BE]/30 text-xs tracking-widest uppercase text-[#2A52BE] mb-4 font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>NUESTROS PILARES FUNDAMENTALES</span>
+            <span>{siteTexts.servicesBadge || 'NUESTROS PILARES FUNDAMENTALES'}</span>
           </div>
         </FadeIn>
 
@@ -68,10 +71,11 @@ export const ServicesSection: React.FC = () => {
             className="font-black uppercase tracking-tight text-[#060A14] leading-none mb-4 text-center"
             style={{ fontSize: 'clamp(2.8rem, 11vw, 150px)' }}
           >
-            SERVICIOS
+            {siteTexts.servicesHeading || 'SERVICIOS'}
           </h2>
           <p className="text-base sm:text-lg text-[#060A14]/70 max-w-2xl mx-auto font-light mb-14 sm:mb-20">
-            Impulsamos proyectos a través de la comunicación visual, el streaming en vivo y la tecnología digital.
+            {siteTexts.servicesSubtitle ||
+              'Impulsamos proyectos a través de la comunicación visual, el streaming en vivo y la tecnología digital.'}
           </p>
         </FadeIn>
 

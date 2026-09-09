@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MarqueeItem, BrandItem, WebProjectItem, ChannelVideoItem, FestivalNightItem } from '../types';
+import { MarqueeItem, BrandItem, WebProjectItem, ChannelVideoItem, FestivalNightItem, SiteTexts } from '../types';
 import { safeStorage } from '../utils/imageCompressor';
 import initialSiteData from '../data/siteContent.json';
 
@@ -8,6 +8,12 @@ interface SiteContentState {
   isAdminRoute: boolean;
   navigateToAdmin: () => void;
   navigateToPublic: () => void;
+
+  // Editable Website Texts
+  siteTexts: SiteTexts;
+  setSiteTexts: React.Dispatch<React.SetStateAction<SiteTexts>>;
+  updateSiteText: (key: keyof SiteTexts, value: string) => void;
+  resetSiteTexts: () => void;
 
   // Brand Icon / Logo
   customIconUrl: string | null;
@@ -69,9 +75,47 @@ interface SiteContentState {
   resetToDefaults: () => void;
 
   // Active admin tab
-  adminActiveTab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger';
-  setAdminActiveTab: (tab: 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger') => void;
+  adminActiveTab: 'texts' | 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger';
+  setAdminActiveTab: (tab: 'texts' | 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger') => void;
 }
+
+export const defaultSiteTexts: SiteTexts = {
+  heroSlogan: '#CONECTANDO PERSONAS',
+  heroHeadline: 'MANCA',
+  heroSubheadline: 'Productora Audiovisual & Agencia Digital 360',
+  heroDescription:
+    'Impulsamos la transformación digital y damos visibilidad a las historias de nuestra región. Streaming multicámara profesional, coberturas en directo de festivales masivos, contenidos comunitarios y desarrollo web llave en mano con hosting y soporte garantizado.',
+  heroCtaButton: 'Comenzar Proyecto',
+  aboutBadge: 'NUESTRA ESENCIA',
+  aboutHeading: 'NUESTRA ESENCIA',
+  aboutBio:
+    'Somos Manca, una productora audiovisual y una agencia digital integral arraigada en la comunidad. Nuestra esencia radica en ser un puente: por un lado, damos visibilidad a las historias, talentos y eventos locales; por el otro, impulsamos la transformación digital de los comercios y empresas de la región.',
+  aboutCtaButton: 'Conocer Más',
+  servicesBadge: 'NUESTROS PILARES FUNDAMENTALES',
+  servicesHeading: 'SERVICIOS',
+  servicesSubtitle:
+    'Impulsamos proyectos a través de la comunicación visual, el streaming en vivo y la tecnología digital.',
+  canalTitle: 'El Canal: @elmancasg',
+  canalTagline: 'Impacto Comunitario • Contenido Propio & Deportes',
+  canalDescription:
+    'Creamos contenido propio que le da voz a deportes, eventos y personas que normalmente no tienen visibilidad. Un compromiso social que inspira a los niños y jóvenes de Sierra Grande y la región como verdaderos referentes.',
+  projectsBadge: 'COBERTURAS, EL CANAL & TRANSFORMACIÓN DIGITAL',
+  projectsHeading: 'PROYECTOS',
+  projectsSubtitle:
+    'Transmisiones en vivo masivas, producciones de El Canal y plataformas digitales para el desarrollo de nuestra gente.',
+  contactBadge: '#CONECTANDO PERSONAS • ESTAMOS A TU DISPOSICIÓN',
+  contactHeading: 'HABLEMOS DE TU PRÓXIMO PROYECTO',
+  contactSubtitle:
+    'Elegí el medio que te sea más cómodo: completá el formulario directo o escribinos a nuestro canal exclusivo de WhatsApp para una respuesta inmediata.',
+  contactDescription:
+    'Dejanos tu consulta mediante el formulario web o escribinos directamente por WhatsApp para recibir atención inmediata y asesoramiento personalizado.',
+  contactPhone: '5492920214741',
+  contactEmail: 'contacto@elmanca.com.ar',
+  contactAddress: 'Sierra Grande & Playas Doradas, Río Negro, Patagonia Argentina',
+  contactLocation: 'Sierra Grande & Playas Doradas, Río Negro, Patagonia Argentina',
+  contactSchedule: 'Lunes a Sábado de 09:00 a 20:00 hs',
+  contactWhatsAppText: 'Hola Manca! Quisiera consultar por sus servicios de streaming y desarrollo web.',
+};
 
 const defaultFestivalNights: FestivalNightItem[] = [
   {
@@ -245,40 +289,112 @@ const defaultWebProjects: WebProjectItem[] = [
 
 const defaultChannelVideos: ChannelVideoItem[] = [
   {
-    id: 'v1',
-    title: 'Fiesta Nacional de Playas Doradas 2026 - Noche 1 en Vivo',
-    youtubeId: 'QMQ4kJgnf0M',
-    thumbnail: 'https://i.ytimg.com/vi/QMQ4kJgnf0M/hqdefault.jpg',
-    views: 'Transmisión Oficial',
-    duration: 'En Vivo',
-    date: 'Playas Doradas 2026',
+    id: 'yt_TPbwU237jqg',
+    title: 'PASANTÍAS 2026 | Proyecto Educativo de la EEE Nº11 de Sierra Grande',
+    youtubeId: 'TPbwU237jqg',
+    thumbnail: 'https://i.ytimg.com/vi/TPbwU237jqg/hqdefault.jpg',
+    views: '532 vistas',
+    duration: 'Reportaje',
+    date: 'Septiembre 2026',
   },
   {
-    id: 'v2',
-    title: 'Fiesta Nacional de Playas Doradas 2026 - Noche 2 en Vivo',
-    youtubeId: '6sBlnahh6Y4',
-    thumbnail: 'https://i.ytimg.com/vi/6sBlnahh6Y4/hqdefault.jpg',
-    views: 'Transmisión Oficial',
-    duration: 'En Vivo',
-    date: 'Playas Doradas 2026',
+    id: 'yt_sq3KAbJKZ9o',
+    title: '🎉 DÍA DEL NIÑO EN SIERRA GRANDE: ¡VUTA MAHUIDA SE LLENO DE ALEGRIA! 🔥🎈',
+    youtubeId: 'sq3KAbJKZ9o',
+    thumbnail: 'https://i.ytimg.com/vi/sq3KAbJKZ9o/hqdefault.jpg',
+    views: '393 vistas',
+    duration: 'Comunidad',
+    date: 'Agosto 2026',
   },
   {
-    id: 'v3',
-    title: 'Fiesta Nacional de Playas Doradas 2026 - Noche 3 en Vivo',
-    youtubeId: 'dHIYvORgujw',
-    thumbnail: 'https://i.ytimg.com/vi/dHIYvORgujw/hqdefault.jpg',
-    views: 'Transmisión Oficial',
-    duration: 'En Vivo',
-    date: 'Playas Doradas 2026',
+    id: 'yt_h_mx1ZPC1sE',
+    title: 'REINAUGURACIÓN DE LA PLAZA DE Bº ESFUERZO PROPIO E ISLAS MALVINAS | INFORMES SG',
+    youtubeId: 'h-mx1ZPC1sE',
+    thumbnail: 'https://i.ytimg.com/vi/h-mx1ZPC1sE/hqdefault.jpg',
+    views: '253 vistas',
+    duration: 'Informes SG',
+    date: 'Agosto 2026',
   },
   {
-    id: 'v4',
-    title: 'Historias de Nuestro Deporte: Jóvenes Referentes Locales',
-    youtubeId: 'elmancasg-deportes',
-    thumbnail: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80',
-    views: 'Comunidad & Pasión',
-    duration: '14:20',
-    date: 'El Canal @elmancasg',
+    id: 'yt__Hc3iBt6NrM',
+    title: '¡Histórico! La nieve volvió a Sierra Grande y recorrimos distintos puntos de nuestro pueblo.',
+    youtubeId: '-Hc3iBt6NrM',
+    thumbnail: 'https://i.ytimg.com/vi/-Hc3iBt6NrM/hqdefault.jpg',
+    views: '545 vistas',
+    duration: 'Cobertura',
+    date: 'Julio 2026',
+  },
+  {
+    id: 'yt_cA4vjirTuS8',
+    title: 'LA HORA DEL PIQUE - #EP5 - 2026',
+    youtubeId: 'cA4vjirTuS8',
+    thumbnail: 'https://i.ytimg.com/vi/cA4vjirTuS8/hqdefault.jpg',
+    views: '186 vistas',
+    duration: 'Programa',
+    date: 'Julio 2026',
+  },
+  {
+    id: 'yt_wkSjdSsyPHI',
+    title: '¡Así se viven las Vacaciones de Invierno en los Barrios de Sierra Grande! | INFORMES SG',
+    youtubeId: 'wkSjdSsyPHI',
+    thumbnail: 'https://i.ytimg.com/vi/wkSjdSsyPHI/hqdefault.jpg',
+    views: '354 vistas',
+    duration: 'Informes SG',
+    date: 'Julio 2026',
+  },
+  {
+    id: 'yt_gKaYcnlYagg',
+    title: 'ARGENTINA ES FINALISTA DEL MUNDIAL 2026 - FESTEJOS EN SIERRA GRANDE',
+    youtubeId: 'gKaYcnlYagg',
+    thumbnail: 'https://i.ytimg.com/vi/gKaYcnlYagg/hqdefault.jpg',
+    views: '823 vistas',
+    duration: 'Festejos',
+    date: 'Julio 2026',
+  },
+  {
+    id: 'yt_z6Ml2HLe4L0',
+    title: 'ACTO 9 DE JULIO | Escuela N°251 T.Tarde | #MancaenlasEscuelas EP. 3',
+    youtubeId: 'z6Ml2HLe4L0',
+    thumbnail: 'https://i.ytimg.com/vi/z6Ml2HLe4L0/hqdefault.jpg',
+    views: '451 vistas',
+    duration: 'Escuelas',
+    date: 'Julio 2026',
+  },
+  {
+    id: 'yt_QHh_51eVzIk',
+    title: 'LA HORA DEL PIQUE - #EP4 - 2026',
+    youtubeId: 'QHh_51eVzIk',
+    thumbnail: 'https://i.ytimg.com/vi/QHh_51eVzIk/hqdefault.jpg',
+    views: '201 vistas',
+    duration: 'Programa',
+    date: 'Julio 2026',
+  },
+  {
+    id: 'yt_4Zr1wXE_2yM',
+    title: 'Emprende SG | ABOGADA Fátima Maldonado: "UN DEUDOR DE ALIMENTOS ESTUVO 10 AÑOS SIN DAR UN PESO"',
+    youtubeId: '4Zr1wXE_2yM',
+    thumbnail: 'https://i.ytimg.com/vi/4Zr1wXE_2yM/hqdefault.jpg',
+    views: '51 vistas',
+    duration: 'Entrevista',
+    date: 'Junio 2026',
+  },
+  {
+    id: 'yt_8Hlhe1VMlW8',
+    title: 'PROMESA A LA BANDERA 2026 | Escuela N° 62 | #MancaenlasEscuelas EP. 2',
+    youtubeId: '8Hlhe1VMlW8',
+    thumbnail: 'https://i.ytimg.com/vi/8Hlhe1VMlW8/hqdefault.jpg',
+    views: '569 vistas',
+    duration: 'Escuelas',
+    date: 'Junio 2026',
+  },
+  {
+    id: 'yt_1zpfzZoGYVQ',
+    title: 'LA HORA DEL PIQUE - #EP2 - 2026',
+    youtubeId: '1zpfzZoGYVQ',
+    thumbnail: 'https://i.ytimg.com/vi/1zpfzZoGYVQ/hqdefault.jpg',
+    views: '344 vistas',
+    duration: 'Programa',
+    date: 'Junio 2026',
   },
 ];
 
@@ -297,8 +413,8 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Admin Route state
   const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminUrl());
   const [adminActiveTab, setAdminActiveTab] = useState<
-    'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger'
-  >('icon');
+    'texts' | 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger'
+  >('texts');
 
   // Hostinger Cloud URL configuration & connection status
   const [hostingerUrl, setHostingerUrlState] = useState<string>(() => {
@@ -392,11 +508,64 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   });
 
   const [channelVideos, setChannelVideosState] = useState<ChannelVideoItem[]>(() => {
-    return safeStorage.get<ChannelVideoItem[]>(
-      'manca_channel_videos',
-      (initialSiteData?.channelVideos as ChannelVideoItem[]) || defaultChannelVideos
-    );
+    const saved = safeStorage.get<ChannelVideoItem[] | null>('manca_channel_videos_v2', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) {
+      return saved;
+    }
+    const legacy = safeStorage.get<ChannelVideoItem[] | null>('manca_channel_videos', null);
+    const isOutdatedLegacy =
+      !legacy ||
+      legacy.length === 0 ||
+      legacy.some(
+        (v) =>
+          v.id === 'v1' ||
+          v.id === 'v2' ||
+          v.thumbnail?.includes('unsplash') ||
+          v.title?.includes('Fiesta Nacional de Playas Doradas 2026 - Transmisión Oficial en Vivo')
+      );
+    if (!isOutdatedLegacy && legacy && legacy.length > 0) {
+      return legacy;
+    }
+    safeStorage.set('manca_channel_videos_v2', defaultChannelVideos);
+    safeStorage.set('manca_channel_videos', defaultChannelVideos);
+    return defaultChannelVideos;
   });
+
+  const [siteTexts, setSiteTextsState] = useState<SiteTexts>(() => {
+    const saved = safeStorage.get<SiteTexts | null>('manca_site_texts', null);
+    if (saved && typeof saved === 'object') {
+      return { ...defaultSiteTexts, ...saved };
+    }
+    const fromJson = (initialSiteData as any)?.siteTexts;
+    if (fromJson && typeof fromJson === 'object') {
+      return { ...defaultSiteTexts, ...fromJson };
+    }
+    return defaultSiteTexts;
+  });
+
+  const setSiteTexts: React.Dispatch<React.SetStateAction<SiteTexts>> = (val) => {
+    setHasPendingChanges(true);
+    setSiteTextsState((prev) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      safeStorage.set('manca_site_texts', next);
+      return next;
+    });
+  };
+
+  const updateSiteText = (key: keyof SiteTexts, value: string) => {
+    setHasPendingChanges(true);
+    setSiteTextsState((prev) => {
+      const next = { ...prev, [key]: value };
+      safeStorage.set('manca_site_texts', next);
+      return next;
+    });
+  };
+
+  const resetSiteTexts = () => {
+    setHasPendingChanges(true);
+    setSiteTextsState(defaultSiteTexts);
+    safeStorage.set('manca_site_texts', defaultSiteTexts);
+  };
 
   // Global Sync: Fetch live published content from Hostinger or server API on boot
   useEffect(() => {
@@ -404,6 +573,14 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const applyIncomingData = (data: any) => {
       if (!isMounted || !data || typeof data !== 'object') return;
+
+      if (data.siteTexts && typeof data.siteTexts === 'object') {
+        setSiteTextsState((prev) => {
+          const merged = { ...prev, ...data.siteTexts };
+          safeStorage.set('manca_site_texts', merged);
+          return merged;
+        });
+      }
 
       if (data.customIconUrl !== undefined) {
         setCustomIconUrlState(data.customIconUrl);
@@ -580,6 +757,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return { success: false, message: 'Por favor ingresa la URL de Hostinger.' };
     }
     const payload = {
+      siteTexts,
       customIconUrl,
       customFooterLogoUrl,
       lastAppliedTime: new Date().toLocaleTimeString('es-AR'),
@@ -729,6 +907,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setChannelVideosState((prev) => {
       const next = typeof val === 'function' ? val(prev) : val;
       safeStorage.set('manca_channel_videos', next);
+      safeStorage.set('manca_channel_videos_v2', next);
       return next;
     });
   };
@@ -743,6 +922,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Export content as JSON string
   const exportContentJson = () => {
     const data = {
+      siteTexts,
       customIconUrl,
       customFooterLogoUrl,
       lastAppliedTime,
@@ -761,6 +941,9 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const data = JSON.parse(jsonString);
       if (!data || typeof data !== 'object') return false;
 
+      if (data.siteTexts && typeof data.siteTexts === 'object') {
+        setSiteTexts((prev) => ({ ...prev, ...data.siteTexts }));
+      }
       if (data.customIconUrl !== undefined) {
         setCustomIconUrl(data.customIconUrl);
       }
@@ -800,6 +983,8 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
 
     // 1. Immediate client-side update
+    safeStorage.set('manca_site_texts', siteTexts);
+
     if (customIconUrl) {
       safeStorage.set('manca_custom_icon', customIconUrl);
       const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -819,12 +1004,14 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     safeStorage.set('manca_web_projects', webProjects);
     safeStorage.set('manca_festival_nights', festivalNights);
     safeStorage.set('manca_channel_videos', channelVideos);
+    safeStorage.set('manca_channel_videos_v2', channelVideos);
     safeStorage.set('manca_last_applied_time', now);
     setLastAppliedTime(now);
     setHasPendingChanges(false);
 
     // 2. Server-side persistence (Local Express server)
     const payload = {
+      siteTexts,
       customIconUrl,
       customFooterLogoUrl,
       lastAppliedTime: now,
@@ -892,6 +1079,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const resetToDefaults = () => {
+    safeStorage.remove('manca_site_texts');
     safeStorage.remove('manca_custom_icon');
     safeStorage.remove('manca_footer_logo');
     safeStorage.remove('manca_marquee_items');
@@ -900,6 +1088,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     safeStorage.remove('manca_festival_nights');
     safeStorage.remove('manca_channel_videos');
     safeStorage.remove('manca_last_applied_time');
+    setSiteTextsState(defaultSiteTexts);
     setCustomIconUrlState(null);
     setCustomFooterLogoUrlState(null);
     setMarqueeItemsState(defaultMarqueeItems);
@@ -916,6 +1105,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          siteTexts: defaultSiteTexts,
           customIconUrl: null,
           customFooterLogoUrl: null,
           lastAppliedTime: null,
@@ -935,6 +1125,10 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
         isAdminRoute,
         navigateToAdmin,
         navigateToPublic,
+        siteTexts,
+        setSiteTexts,
+        updateSiteText,
+        resetSiteTexts,
         customIconUrl,
         setCustomIconUrl,
         customFooterLogoUrl,

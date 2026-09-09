@@ -22,20 +22,19 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
-  const { customIconUrl } = useSiteContent();
+  const { customIconUrl, customFooterLogoUrl, siteTexts } = useSiteContent();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Inicio', href: '#hero' },
-    { name: 'Servicios', href: '#services' },
-    { name: 'Marcas', href: '#brands' },
-    { name: 'Planes', href: '#pricing' },
-    { name: 'Proyectos', href: '#projects' },
+    { name: 'Inicio', href: '#inicio' },
+    { name: 'Servicios', href: '#servicios' },
+    { name: 'El Canal', href: '#canal' },
+    { name: 'Contacto', href: '#contacto' },
   ];
 
   return (
     <section
-      id="hero"
+      id="inicio"
       className="relative min-h-screen w-full flex flex-col justify-between overflow-hidden select-none bg-[#060A14] text-white"
       style={{
         background: 'radial-gradient(ellipse 85% 75% at 50% 30%, #0C1A3E 0%, #060A14 65%, #03050B 100%)',
@@ -105,7 +104,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Brand Logo */}
           <a
-            href="#hero"
+            href="#inicio"
             className="flex items-center gap-3 group transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
           >
             {customIconUrl ? (
@@ -129,7 +128,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           </a>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 px-4 py-2 rounded-full bg-[#0A142A]/80 border border-[#2A52BE]/40 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+          <nav className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0A142A]/80 border border-[#2A52BE]/40 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -155,7 +154,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl bg-[#0A142A] border border-[#2A52BE]/40 text-white hover:bg-[#12224A] transition-colors cursor-pointer"
+            className="md:hidden p-2 rounded-xl bg-[#0A142A] border border-[#2A52BE]/40 text-white hover:bg-[#12224A] transition-colors cursor-pointer"
             aria-label="Abrir Menú"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -164,7 +163,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden mt-3 p-5 rounded-2xl bg-[#081022] border border-[#2A52BE]/50 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden mt-3 p-5 rounded-2xl bg-[#081022] border border-[#2A52BE]/50 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex flex-col gap-3">
               {navLinks.map((link) => (
                 <a
@@ -199,9 +198,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
         <FadeIn delay={0.05} y={20}>
           <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-[#101D42]/90 border border-[#2A52BE]/60 text-xs sm:text-sm tracking-widest uppercase text-[#93C5FD] mb-6 shadow-[0_0_30px_rgba(42,82,190,0.4)] backdrop-blur-md">
             <Sparkles className="w-4 h-4 text-[#60A5FA]" />
-            <span className="font-bold text-white">#CONECTANDO PERSONAS</span>
+            <span className="font-bold text-white">{siteTexts.heroSlogan || '#CONECTANDO PERSONAS'}</span>
             <span className="text-[#3B82F6] font-normal">•</span>
-            <span>MANCA</span>
+            <span>{siteTexts.heroHeadline || 'MANCA'}</span>
           </div>
         </FadeIn>
 
@@ -212,24 +211,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             className="hero-heading hero-heading-glow font-black uppercase leading-none tracking-tight text-center select-none"
             style={{ fontSize: 'clamp(3rem, 12vw, 150px)' }}
           >
-            MANCA
+            {siteTexts.heroHeadline || 'MANCA'}
           </h1>
         </FadeIn>
 
-        {/* Rotating Stamp Motif in the Center */}
+        {/* Rotating Stamp Motif in the Center with Custom Logo */}
         <FadeIn delay={0.15} y={20} duration={0.8} className="my-3 sm:my-5">
           <div className="relative inline-block hover:scale-105 transition-transform duration-300">
-            <RotatingStampBadge size={130} />
+            <RotatingStampBadge size={130} customIconUrl={customIconUrl || customFooterLogoUrl} />
           </div>
         </FadeIn>
 
         {/* Hero Narrative Description */}
         <FadeIn delay={0.2} y={30} className="w-full max-w-3xl">
           <p className="text-base sm:text-lg md:text-xl text-[#CBD5E1] font-light leading-relaxed mb-8">
-            Impulsamos la transformación digital y damos visibilidad a las historias de nuestra región.
-            <strong className="text-white font-semibold"> Streaming multicámara profesional</strong>,
-            coberturas en directo de festivales masivos, contenidos comunitarios y
-            <strong className="text-white font-semibold"> desarrollo web llave en mano</strong> con hosting y soporte garantizado.
+            {siteTexts.heroDescription ||
+              'Impulsamos la transformación digital y damos visibilidad a las historias de nuestra región. Streaming multicámara profesional, coberturas en directo de festivales masivos, contenidos comunitarios y desarrollo web llave en mano con hosting y soporte garantizado.'}
           </p>
         </FadeIn>
 
@@ -238,13 +235,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 justify-center">
             <ContactButton
               id="hero-primary-cta"
-              label="Comenzar Proyecto"
+              label={siteTexts.heroCtaButton || 'Comenzar Proyecto'}
               onClick={onOpenContact}
               size="lg"
               className="w-full sm:w-auto shadow-[0_0_35px_rgba(42,82,190,0.5)]"
             />
             <a
-              href="#services"
+              href="#servicios"
               className="w-full sm:w-auto px-8 py-3.5 sm:px-10 sm:py-4 rounded-full bg-[#0E1834] border border-[#2A52BE]/50 hover:border-[#60A5FA] text-white text-xs sm:text-sm font-semibold uppercase tracking-widest hover:bg-[#152554] transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
             >
               <span>Explorar Servicios</span>
@@ -254,59 +251,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
         </FadeIn>
       </div>
 
-      {/* 3. HERO FOOTER: Highlights Strip & Scroll Indicator */}
-      <div className="relative z-20 w-full px-5 sm:px-8 md:px-12 pb-6 pt-4">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 border-t border-[#2A52BE]/20 pt-6">
-          {/* Highlights */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full md:w-auto text-left">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#12224A] border border-[#2A52BE]/40 flex items-center justify-center text-[#60A5FA] shrink-0">
-                <Tv className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">Streaming HD</p>
-                <p className="text-[11px] text-[#93C5FD]">Sin cortes</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#12224A] border border-[#2A52BE]/40 flex items-center justify-center text-[#60A5FA] shrink-0">
-                <Globe className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">Webs + Hosting</p>
-                <p className="text-[11px] text-[#93C5FD]">Llave en mano</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#12224A] border border-[#2A52BE]/40 flex items-center justify-center text-[#60A5FA] shrink-0">
-                <Radio className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">El Canal</p>
-                <p className="text-[11px] text-[#93C5FD]">Comunidad local</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#12224A] border border-[#2A52BE]/40 flex items-center justify-center text-[#60A5FA] shrink-0">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">1 Año Garantía</p>
-                <p className="text-[11px] text-[#93C5FD]">Mantenimiento</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Scroll Down Indicator */}
+      {/* 3. HERO FOOTER: Clean centered scroll indicator */}
+      <div className="relative z-20 w-full px-5 sm:px-8 md:px-12 pb-8 pt-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-center border-t border-[#2A52BE]/20 pt-6">
           <a
-            href="#marquee"
-            className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#93C5FD] hover:text-white transition-colors cursor-pointer"
+            href="#galeria"
+            className="group inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[#0A142A]/80 border border-[#2A52BE]/40 hover:border-[#60A5FA] text-xs uppercase tracking-widest text-[#93C5FD] hover:text-white transition-all duration-300 hover:bg-[#12224A] cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
           >
             <span>Descubrir Producciones</span>
-            <ChevronDown className="w-4 h-4 animate-bounce text-[#60A5FA]" />
+            <ChevronDown className="w-4 h-4 animate-bounce text-[#60A5FA] group-hover:translate-y-0.5 transition-transform" />
           </a>
         </div>
       </div>

@@ -18,7 +18,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onOpenContact })
 
   return (
     <section
-      id="pricing"
+      id="planes"
       className="relative w-full bg-[#080E1E] text-white px-5 sm:px-8 md:px-12 py-24 sm:py-32 select-none border-t border-[#2A52BE]/30 overflow-hidden"
     >
       {/* Background glow effects */}

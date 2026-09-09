@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSiteContent } from '../context/SiteContentContext';
 import { FadeIn } from './FadeIn';
 import { ContactButton } from './ContactButton';
@@ -22,7 +22,7 @@ import {
 export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
   onOpenContact,
 }) => {
-  const { webProjects, channelVideos, customIconUrl, customFooterLogoUrl, festivalNights } = useSiteContent();
+  const { webProjects, channelVideos, customIconUrl, customFooterLogoUrl, festivalNights, siteTexts } = useSiteContent();
 
   // Active video modal state for playing directly
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -32,6 +32,26 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
 
   // Expandable/collapsible project cards (toggles support both click and mouse hover)
   const [openProject, setOpenProject] = useState<string | null>('01');
+
+  // Toggle for showing more channel videos
+  const [showAllVideos, setShowAllVideos] = useState(false);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (typeof window !== 'undefined') {
+        if (window.location.hash === '#canal') {
+          setOpenProject('02');
+          const el = document.getElementById('canal');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        } else if (window.location.hash === '#proyectos' || window.location.hash === '#projects') {
+          setOpenProject('01');
+        }
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   const toggleProject = (id: string) => {
     setOpenProject((prev) => (prev === id ? null : id));
@@ -48,9 +68,10 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
 
   return (
     <section
-      id="projects"
+      id="proyectos"
       className="relative z-10 w-full bg-[#060A14] pt-24 sm:pt-32 pb-24 px-4 sm:px-8 md:px-12 overflow-hidden select-none border-t border-[#2A52BE]/20"
     >
+      <span id="projects" className="sr-only" />
       {/* Glow aura */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-[#2A52BE]/10 blur-[140px] pointer-events-none rounded-full" />
 
@@ -59,7 +80,7 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
         <FadeIn delay={0} y={20}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#111D42]/80 border border-[#2A52BE]/40 text-xs tracking-widest uppercase text-[#93C5FD] mb-4">
             <Radio className="w-3.5 h-3.5 text-[#3B82F6]" />
-            <span>COBERTURAS, EL CANAL & TRANSFORMACIÓN DIGITAL</span>
+            <span>{siteTexts.projectsBadge || 'COBERTURAS, EL CANAL & TRANSFORMACIÓN DIGITAL'}</span>
           </div>
         </FadeIn>
 
@@ -69,10 +90,11 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
             className="hero-heading font-black uppercase leading-none tracking-tight text-center"
             style={{ fontSize: 'clamp(2.8rem, 10vw, 130px)' }}
           >
-            PROYECTOS
+            {siteTexts.projectsHeading || 'PROYECTOS'}
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-[#CBD5E1] font-light max-w-2xl mx-auto mt-2">
-            Transmisiones en vivo masivas, producciones de El Canal y plataformas digitales para el desarrollo de nuestra gente.
+            {siteTexts.projectsSubtitle ||
+              'Transmisiones en vivo masivas, producciones de El Canal y plataformas digitales para el desarrollo de nuestra gente.'}
           </p>
         </FadeIn>
       </div>
@@ -225,6 +247,7 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
             CARD 02: EL CANAL (@elmancasg) WITH RECENT VIDEOS
            ======================================================== */}
         <div
+          id="canal"
           className={`w-full rounded-[28px] sm:rounded-[38px] md:rounded-[48px] border-2 transition-all duration-300 ${
             openProject === '02'
               ? 'border-[#3870E0] bg-[#0A1224] shadow-[0_20px_50px_rgba(42,82,190,0.35)]'
@@ -294,16 +317,84 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
           {/* Collapsible Content */}
           {openProject === '02' && (
             <div className="pt-6 mt-6 border-t border-[#2A52BE]/30 animate-fadeIn">
+              {/* YouTube Channel Hero Card */}
+              <div className="mb-6 p-4 sm:p-6 rounded-2xl bg-[#091122] border border-red-500/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-[0_10px_30px_rgba(239,68,68,0.12)]">
+                <div className="flex items-center gap-3.5 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                    <Youtube className="w-7 h-7 fill-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base sm:text-lg font-black uppercase text-white tracking-wide">
+                        El Manca SG
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider border border-red-500/40">
+                        Canal Oficial
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#93C5FD] mt-0.5 font-medium">
+                      @elmancasg • +1.290 suscriptores • 116 producciones
+                    </p>
+                    <p className="text-xs text-[#CBD5E1] mt-1 font-light hidden sm:block">
+                      Transmisiones en vivo, coberturas masivas y el ciclo de entrevistas deportivas "Ecos de Cancha".
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full md:w-auto">
+                  <a
+                    href="https://www.youtube.com/@elmancasg?sub_confirmation=1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-md cursor-pointer"
+                  >
+                    <Youtube className="w-4 h-4 fill-white" />
+                    <span>Suscribirse</span>
+                  </a>
+                  <a
+                    href="https://www.youtube.com/@elmancasg"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-[#14265E] hover:bg-[#1E3A8A] text-[#93C5FD] hover:text-white text-xs font-semibold uppercase tracking-wider transition-colors border border-[#2A52BE]/40 cursor-pointer"
+                  >
+                    <span>Ver en YouTube</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
               <p className="text-xs sm:text-sm text-[#CBD5E1] font-light max-w-3xl leading-relaxed mb-6">
-                Creamos contenido propio que le da voz a deportes, eventos y personas que normalmente no tienen visibilidad. Un compromiso social que inspira a los niños de la zona como verdaderos referentes.
+                Creamos contenido propio que le da voz a deportes, eventos y personas que normalmente no tienen visibilidad. Un compromiso social que inspira a los niños y jóvenes de Sierra Grande y la región como verdaderos referentes.
               </p>
 
-              {/* Grid of channel videos */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                {channelVideos.map((vid) => (
+              {/* Reproductor de Últimas Subidas (IFrame Responsivo Lista UU) */}
+              <div className="mb-8 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-[#081022] border border-[#2A52BE]/30 shadow-[0_15px_40px_rgba(0,0,0,0.45)]">
+                <div className="flex items-center gap-2.5 mb-3.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+                  <h4 className="text-sm sm:text-base font-bold uppercase tracking-wider text-white">
+                    MIRA NUESTROS ÚLTIMOS VÍDEOS
+                  </h4>
+                </div>
+
+                {/* Contenedor IFrame Responsivo con bordes redondeados y sombra sutil */}
+                <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
+                  <iframe
+                    src="https://www.youtube.com/embed/videoseries?list=UU3woFJgJr1F8-55tU9Bxz3Q"
+                    title="MIRA NUESTROS ÚLTIMOS VÍDEOS - El Manca SG"
+                    className="absolute inset-0 w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+
+              {/* Grid de los últimos videos reales del canal */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                {channelVideos.slice(0, showAllVideos ? channelVideos.length : 6).map((vid) => (
                   <div
                     key={vid.id}
-                    className="group/item rounded-2xl overflow-hidden bg-[#070E20] border border-[#2A52BE]/30 hover:border-[#3870E0] transition-all flex flex-col"
+                    className="group/item rounded-2xl overflow-hidden bg-[#070E20] border border-[#2A52BE]/30 hover:border-[#3870E0] transition-all flex flex-col shadow-md"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-black">
                       <img
@@ -312,48 +403,88 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
                         className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex items-center justify-center">
                         <button
                           type="button"
                           onClick={() => setActiveVideoId(vid.youtubeId)}
-                          className="w-10 h-10 rounded-full bg-[#2A52BE] text-white flex items-center justify-center shadow-lg transform group-hover/item:scale-110 transition-transform cursor-pointer"
+                          className="w-11 h-11 rounded-full bg-[#2A52BE] hover:bg-[#3870E0] text-white flex items-center justify-center shadow-lg transform group-hover/item:scale-110 transition-transform cursor-pointer"
+                          aria-label={`Reproducir ${vid.title}`}
                         >
                           <Play className="w-4 h-4 fill-white ml-0.5" />
                         </button>
                       </div>
 
                       {vid.duration && (
-                        <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white">
+                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/85 border border-white/10 text-[10px] font-mono text-white">
                           {vid.duration}
                         </span>
                       )}
                     </div>
 
-                    <div className="p-3 flex-1 flex flex-col justify-between bg-[#081228]">
+                    <div className="p-3.5 flex-1 flex flex-col justify-between bg-[#081228]">
                       <div>
-                        <span className="text-[10px] text-[#60A5FA] font-semibold uppercase tracking-wider">
-                          {vid.date || 'El Canal'}
-                        </span>
-                        <h4 className="text-xs font-bold text-white uppercase tracking-tight line-clamp-2 mt-0.5">
+                        <div className="flex items-center justify-between text-[10px] text-[#60A5FA] font-semibold uppercase tracking-wider mb-1">
+                          <span>{vid.date || 'El Canal'}</span>
+                          {vid.views && <span className="text-[#94A3B8] font-normal lowercase">{vid.views}</span>}
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight line-clamp-2 leading-snug">
                           {vid.title}
                         </h4>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-[#94A3B8]">
-                        <span>{vid.views || 'Comunidad'}</span>
+                      <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => setActiveVideoId(vid.youtubeId)}
+                          className="text-[#60A5FA] hover:text-white font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                          <span>Reproducir</span>
+                        </button>
                         <a
                           href={`https://www.youtube.com/watch?v=${vid.youtubeId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#60A5FA] hover:underline flex items-center gap-1"
+                          className="text-[#94A3B8] hover:text-[#60A5FA] flex items-center gap-1 transition-colors"
                         >
-                          <span>Ver</span>
+                          <span>YouTube</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Botón para ver más o menos videos si hay más de 6 */}
+              {channelVideos.length > 6 && (
+                <div className="flex justify-center mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllVideos(!showAllVideos)}
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#0E1B38] hover:bg-[#2A52BE] border border-[#2A52BE]/40 text-xs font-bold text-white transition-all cursor-pointer shadow-md"
+                  >
+                    <span>{showAllVideos ? 'Mostrar menos vídeos' : `Ver más vídeos del canal (${channelVideos.length})`}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${showAllVideos ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+              )}
+
+              {/* Bottom Channel Banner Link */}
+              <div className="p-4 rounded-xl bg-[#091122] border border-[#2A52BE]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#CBD5E1]">
+                <div className="flex items-center gap-2 text-center sm:text-left">
+                  <Youtube className="w-4 h-4 text-red-500 shrink-0" />
+                  <span>Explorá todas las transmisiones, coberturas completas y entrevistas en nuestro canal oficial.</span>
+                </div>
+                <a
+                  href="https://www.youtube.com/@elmancasg"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-400 hover:text-white font-bold uppercase tracking-wider text-[11px] transition-colors shrink-0 cursor-pointer"
+                >
+                  <span>Abrir @elmancasg en YouTube</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
           )}
@@ -560,82 +691,6 @@ export const ProjectsSection: React.FC<{ onOpenContact?: () => void }> = ({
           </div>
         </div>
       )}
-
-      {/* Footer Section with User's Uploaded Logo */}
-      <div
-        id="contact"
-        className="max-w-6xl mx-auto mt-20 pt-16 border-t border-[#2A52BE]/30 flex flex-col md:flex-row items-center justify-between gap-8"
-      >
-        <div className="flex flex-col items-center md:items-start text-center md:text-left">
-          <div className="flex items-center gap-3 mb-2.5">
-            {customFooterLogoUrl ? (
-              <img
-                src={customFooterLogoUrl}
-                alt="Logo Manca Footer"
-                className="h-12 sm:h-14 w-auto max-w-[240px] object-contain"
-              />
-            ) : customIconUrl ? (
-              <div className="flex items-center gap-3">
-                <img
-                  src={customIconUrl}
-                  alt="Logo Manca"
-                  className="h-12 w-12 rounded-full object-cover border-2 border-[#2A52BE] shadow-[0_0_15px_rgba(42,82,190,0.6)]"
-                />
-                <span className="text-white font-black text-2xl tracking-wider uppercase font-['Kanit']">
-                  MANCA
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <MancaCircularIcon size={44} />
-                <span className="text-white font-black text-2xl tracking-wider uppercase font-['Kanit']">
-                  MANCA
-                </span>
-              </div>
-            )}
-          </div>
-          <p className="text-xs uppercase tracking-widest text-[#93C5FD] font-semibold">
-            #Conectando Personas • Productora Audiovisual & Agencia Digital 360
-          </p>
-          <p className="text-sm text-[#94A3B8] mt-1 max-w-md font-light">
-            El puente entre las historias locales y la transformación digital de nuestros comercios y eventos.
-          </p>
-
-          {/* Official Contact Details */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-xs">
-            <a
-              href="https://wa.me/5492920214741?text=Hola%20Manca%2C%20quisiera%20hacer%20una%20consulta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-white hover:text-[#60A5FA] transition-colors"
-            >
-              <Phone className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="font-medium">+54 9 2920 21-4741</span>
-            </a>
-            <a
-              href="mailto:contacto@elmanca.com.ar?subject=Consulta%20desde%20la%20web%20Manca"
-              className="flex items-center gap-2 text-white hover:text-[#60A5FA] transition-colors"
-            >
-              <Mail className="w-3.5 h-3.5 text-[#60A5FA]" />
-              <span className="font-medium">contacto@elmanca.com.ar</span>
-            </a>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <ContactButton
-            id="footer-contact-button"
-            label="Iniciar Conversación"
-            onClick={onOpenContact}
-          />
-        </div>
-      </div>
-
-      {/* Discreet Copyright ONLY - No admin links */}
-      <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-3">
-        <p>© 2026 Manca • Todos los derechos reservados.</p>
-        <p className="text-[11px] text-[#475569]">#Conectando Personas</p>
-      </div>
     </section>
   );
 };

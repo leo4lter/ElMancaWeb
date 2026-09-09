@@ -132,9 +132,14 @@ export const MancaCircularIcon: React.FC<{
  * Rotating circular badge with text "#CONECTANDO PERSONAS • MANCA •"
  * Perfect for the brand's requested motif!
  */
-export const RotatingStampBadge: React.FC<{ size?: number; className?: string }> = ({
+export const RotatingStampBadge: React.FC<{
+  size?: number;
+  className?: string;
+  customIconUrl?: string | null;
+}> = ({
   size = 140,
   className = '',
+  customIconUrl = null,
 }) => {
   return (
     <div
@@ -160,9 +165,20 @@ export const RotatingStampBadge: React.FC<{ size?: number; className?: string }>
         </svg>
       </div>
 
-      {/* Central icon */}
-      <div className="relative z-10 scale-75">
-        <MancaCircularIcon size={size * 0.55} />
+      {/* Central icon: displays custom uploaded logo if present, else fallback vector */}
+      <div className="relative z-10 flex items-center justify-center">
+        {customIconUrl ? (
+          <img
+            src={customIconUrl}
+            alt="Logo Manca"
+            style={{ width: size * 0.52, height: size * 0.52 }}
+            className="rounded-full object-cover border-2 border-[#2A52BE] shadow-[0_0_20px_rgba(42,82,190,0.6)]"
+          />
+        ) : (
+          <div className="scale-75">
+            <MancaCircularIcon size={size * 0.55} />
+          </div>
+        )}
       </div>
     </div>
   );

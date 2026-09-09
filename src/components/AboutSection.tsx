@@ -10,14 +10,15 @@ interface AboutSectionProps {
 }
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenContact }) => {
-  const { customIconUrl } = useSiteContent();
+  const { customIconUrl, siteTexts } = useSiteContent();
 
   const mancaBio =
+    siteTexts.aboutBio ||
     "Somos Manca, una productora audiovisual y una agencia digital integral arraigada en la comunidad. Nuestra esencia radica en ser un puente: por un lado, damos visibilidad a las historias, talentos y eventos locales; por el otro, impulsamos la transformación digital de los comercios y empresas de la región.";
 
   return (
     <section
-      id="about"
+      id="nosotros"
       className="relative min-h-screen w-full flex flex-col items-center justify-center px-5 sm:px-8 md:px-10 py-24 sm:py-32 overflow-hidden select-none"
       style={{
         background: 'radial-gradient(ellipse 70% 60% at 50% 50%, #0A142E 0%, #060A14 70%, #03050B 100%)',
@@ -85,7 +86,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenContact }) => 
             ) : (
               <MancaCircularIcon size={20} />
             )}
-            <span className="font-semibold text-white">NUESTRA ESENCIA</span>
+            <span className="font-semibold text-white">{siteTexts.aboutBadge || 'NUESTRA ESENCIA'}</span>
           </div>
         </FadeIn>
 
@@ -96,7 +97,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenContact }) => 
             className="hero-heading font-black uppercase leading-none tracking-tight text-center"
             style={{ fontSize: 'clamp(2.8rem, 11vw, 140px)' }}
           >
-            NUESTRA ESENCIA
+            {siteTexts.aboutHeading || 'NUESTRA ESENCIA'}
           </h2>
         </FadeIn>
 
@@ -115,7 +116,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenContact }) => 
         <FadeIn delay={0.25} y={20}>
           <ContactButton
             id="about-contact-button"
-            label="Conocer Más"
+            label={siteTexts.aboutCtaButton || 'Conocer Más'}
             onClick={onOpenContact}
           />
         </FadeIn>

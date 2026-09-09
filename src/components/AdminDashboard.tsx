@@ -3,6 +3,7 @@ import { useSiteContent } from '../context/SiteContentContext';
 import { MancaCircularIcon } from './MancaBrand';
 import { compressImageFile } from '../utils/imageCompressor';
 import { AdminHostingerTab } from './AdminHostingerTab';
+import { AdminTextsTab } from './AdminTextsTab';
 import {
   Globe,
   SlidersHorizontal,
@@ -17,6 +18,7 @@ import {
   ExternalLink,
   ArrowLeft,
   Eye,
+  EyeOff,
   Sparkles,
   Save,
   Film,
@@ -25,6 +27,11 @@ import {
   UploadCloud,
   Database,
   Server,
+  Type,
+  Lock,
+  User,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -62,9 +69,48 @@ export const AdminDashboard: React.FC = () => {
     uploadImageToHostinger,
   } = useSiteContent();
 
+  // Authentication State: admin / @elmanca91218
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return (
+        sessionStorage.getItem('manca_admin_auth') === 'true' ||
+        localStorage.getItem('manca_admin_auth') === 'true'
+      );
+    }
+    return false;
+  });
+
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (usernameInput.trim() === 'admin' && passwordInput === '@elmanca91218') {
+      setIsAuthenticated(true);
+      setLoginError(null);
+      sessionStorage.setItem('manca_admin_auth', 'true');
+      if (rememberMe) {
+        localStorage.setItem('manca_admin_auth', 'true');
+      }
+    } else {
+      setLoginError('Usuario o contraseña incorrectos. Verifique sus credenciales.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('manca_admin_auth');
+    localStorage.removeItem('manca_admin_auth');
+    setUsernameInput('');
+    setPasswordInput('');
+  };
+
   const [activeTab, setActiveTab] = useState<
-    'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger'
-  >(adminActiveTab || 'icon');
+    'texts' | 'icon' | 'marquee' | 'brands' | 'webs' | 'festival' | 'hostinger'
+  >((adminActiveTab as any) || 'texts');
 
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -185,6 +231,132 @@ export const AdminDashboard: React.FC = () => {
     description: '',
   });
 
+  // Authentication Gate: if user is not authenticated with admin / @elmanca91218
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen w-full bg-[#040813] text-white flex flex-col justify-center items-center p-4 sm:p-6 font-['Kanit'] selection:bg-[#2A52BE] selection:text-white relative overflow-hidden">
+        {/* Ambient background glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#2A52BE]/18 blur-[130px] pointer-events-none rounded-full" />
+
+        <div className="w-full max-w-md bg-[#081024] border border-[#2A52BE]/50 rounded-3xl p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative z-10">
+          {/* Logo & Title */}
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-[#111D42] border border-[#2A52BE]/70 flex items-center justify-center text-[#60A5FA] mb-4 shadow-[0_0_30px_rgba(42,82,190,0.5)] overflow-hidden">
+              {customIconUrl ? (
+                <img src={customIconUrl} alt="Manca" className="w-full h-full object-cover" />
+              ) : (
+                <MancaCircularIcon size={46} />
+              )}
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2A52BE]/20 border border-[#2A52BE]/40 text-[#93C5FD] text-[11px] font-bold uppercase tracking-widest mb-2">
+              <Lock className="w-3 h-3 text-[#60A5FA]" />
+              <span>Acceso Restringido</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-wide text-white">
+              MANCA ADMIN
+            </h1>
+            <p className="text-xs text-[#94A3B8] mt-1.5">
+              Ingresá con tus credenciales de administrador para gestionar la web
+            </p>
+          </div>
+
+          {loginError && (
+            <div className="mb-5 p-3.5 rounded-xl bg-red-950/60 border border-red-500/60 text-red-200 text-xs flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-red-400 shrink-0 animate-ping" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs uppercase tracking-wider text-[#93C5FD] font-semibold block mb-1.5">
+                Usuario
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#60A5FA]">
+                  <User className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="admin"
+                  value={usernameInput}
+                  onChange={(e) => {
+                    setUsernameInput(e.target.value);
+                    if (loginError) setLoginError(null);
+                  }}
+                  className="w-full bg-[#050B18] border border-[#2A52BE]/40 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#3870E0] transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs uppercase tracking-wider text-[#93C5FD] font-semibold block mb-1.5">
+                Contraseña
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#60A5FA]">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    if (loginError) setLoginError(null);
+                  }}
+                  className="w-full bg-[#050B18] border border-[#2A52BE]/40 rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#3870E0] transition-colors font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#94A3B8] hover:text-white cursor-pointer"
+                  title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-[#2A52BE] text-[#3870E0] focus:ring-0 bg-[#050B18]"
+                />
+                <span className="text-xs text-[#94A3B8]">Recordar sesión</span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-[#2A52BE] to-[#3870E0] hover:from-[#1E3A8A] hover:to-[#2A52BE] text-white font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-[0_0_25px_rgba(42,82,190,0.5)] hover:shadow-[0_0_35px_rgba(42,82,190,0.8)] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Ingresar al Panel</span>
+            </button>
+          </form>
+
+          <div className="mt-6 pt-5 border-t border-[#2A52BE]/20 text-center">
+            <button
+              type="button"
+              onClick={navigateToPublic}
+              className="text-xs text-[#93C5FD] hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Volver a la Web Pública</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen w-full bg-[#040813] text-white flex flex-col font-['Kanit'] selection:bg-[#2A52BE] selection:text-white pb-20"
@@ -301,12 +473,44 @@ export const AdminDashboard: React.FC = () => {
             <Eye className="w-4 h-4" />
             <span>Ver Sitio en Vivo</span>
           </button>
+
+          {/* User Badge & Logout */}
+          <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-[#2A52BE]/30">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#14234C] border border-[#2A52BE]/40 text-xs text-[#93C5FD]">
+              <User className="w-3.5 h-3.5 text-[#60A5FA]" />
+              <span className="font-bold text-white">admin</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="p-2 rounded-xl border border-red-500/30 text-red-300 hover:bg-red-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Cerrar sesión de administrador"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Tabs Navigation */}
       <div className="w-full bg-[#060C1B] border-b border-[#2A52BE]/20 px-5 sm:px-8 flex overflow-x-auto select-none">
         <div className="max-w-6xl w-full mx-auto flex gap-2">
+          {/* TAB 0: TEXTOS DEL SITIO */}
+          <button
+            type="button"
+            id="admin-tab-texts"
+            onClick={() => setActiveTab('texts')}
+            className={`flex items-center gap-2 px-4 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'texts'
+                ? 'border-[#3870E0] text-white bg-[#0E1A38]'
+                : 'border-transparent text-[#94A3B8] hover:text-white'
+            }`}
+          >
+            <Type className="w-4 h-4 text-[#3870E0]" />
+            <span>0. Textos del Sitio Web</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab('icon')}
@@ -415,6 +619,9 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-5 sm:p-8 space-y-8">
+        {/* TAB 0: TEXTOS DEL SITIO */}
+        {activeTab === 'texts' && <AdminTextsTab />}
+
         {/* TAB 1: ICON & LOGO */}
         {activeTab === 'icon' && (
           <div className="space-y-6">
@@ -1215,14 +1422,32 @@ export const AdminDashboard: React.FC = () => {
                           />
                         </label>
                       </div>
-                      <input
-                        type="text"
-                        value={video.title}
-                        onChange={(e) => updateChannelVideo(video.id, { title: e.target.value })}
-                        className="w-full bg-[#040813] border border-[#2A52BE]/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#3870E0] mb-2"
-                        title="Título del video"
-                      />
-                      <span className="text-[10px] text-[#94A3B8]">ID: {video.youtubeId}</span>
+                      <div className="flex flex-col gap-1.5">
+                        <input
+                          type="text"
+                          value={video.title}
+                          onChange={(e) => updateChannelVideo(video.id, { title: e.target.value })}
+                          className="w-full bg-[#040813] border border-[#2A52BE]/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#3870E0]"
+                          placeholder="Título del video"
+                          title="Título del video"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-[#94A3B8] shrink-0">ID YouTube:</span>
+                          <input
+                            type="text"
+                            value={video.youtubeId}
+                            onChange={(e) => {
+                              const newId = e.target.value.trim();
+                              updateChannelVideo(video.id, {
+                                youtubeId: newId,
+                                thumbnail: newId.length >= 8 ? `https://i.ytimg.com/vi/${newId}/hqdefault.jpg` : video.thumbnail,
+                              });
+                            }}
+                            className="w-full bg-[#040813] border border-[#2A52BE]/30 rounded px-2 py-0.5 text-[10px] text-white focus:outline-none focus:border-[#3870E0]"
+                            placeholder="Ej: TPbwU237jqg"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

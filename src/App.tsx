@@ -8,6 +8,8 @@ import { ServicesSection } from './components/ServicesSection';
 import { BrandsCarousel } from './components/BrandsCarousel';
 import { PricingSection } from './components/PricingSection';
 import { ProjectsSection } from './components/ProjectsSection';
+import { ContactSection } from './components/ContactSection';
+import { Footer } from './components/Footer';
 import { ContactModal } from './components/ContactModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { FloatingActions } from './components/FloatingActions';
@@ -55,6 +57,12 @@ function MainApp() {
 
       {/* 7. PROJECTS SECTION (Fiesta Nacional Playas Doradas en directo, El Canal @elmancasg, y Webs con carrusel GIF/PNG) */}
       <ProjectsSection onOpenContact={handleOpenContact} />
+
+      {/* 8. CONTACT SECTION (Formulario Web Completo + Apartado Exclusivo WhatsApp) */}
+      <ContactSection />
+
+      {/* 9. BRAND FOOTER (Logo de la marca, links y copyright) */}
+      <Footer onOpenContact={handleOpenContact} />
 
       {/* Interactive Contact Modal */}
       <ContactModal isOpen={isContactOpen} onClose={handleCloseContact} />

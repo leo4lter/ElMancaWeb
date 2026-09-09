@@ -46,7 +46,7 @@ export const MarqueeSection: React.FC = () => {
 
   return (
     <section
-      id="marquee"
+      id="galeria"
       ref={sectionRef}
       className="relative w-full overflow-hidden pt-20 sm:pt-28 md:pt-36 pb-14 select-none"
       style={{

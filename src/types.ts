@@ -62,3 +62,45 @@ export interface FestivalNightItem {
   badge?: string;
 }
 
+export interface SiteTexts {
+  // Hero Section
+  heroSlogan: string;
+  heroHeadline: string;
+  heroSubheadline: string;
+  heroDescription: string;
+  heroCtaButton: string;
+
+  // Nosotros (About Section)
+  aboutBadge: string;
+  aboutHeading: string;
+  aboutBio: string;
+  aboutCtaButton: string;
+
+  // Servicios (Services Section)
+  servicesBadge: string;
+  servicesHeading: string;
+  servicesSubtitle: string;
+
+  // El Canal (Card 02)
+  canalTitle: string;
+  canalTagline: string;
+  canalDescription: string;
+
+  // Proyectos
+  projectsBadge?: string;
+  projectsHeading?: string;
+  projectsSubtitle?: string;
+
+  // Contacto (Contact Section)
+  contactBadge: string;
+  contactHeading: string;
+  contactSubtitle: string;
+  contactDescription?: string;
+  contactPhone: string;
+  contactEmail: string;
+  contactAddress: string;
+  contactLocation?: string;
+  contactSchedule?: string;
+  contactWhatsAppText: string;
+}
+

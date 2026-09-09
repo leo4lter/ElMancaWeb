@@ -10,7 +10,7 @@ export const BrandsCarousel: React.FC = () => {
 
   return (
     <section
-      id="brands"
+      id="marcas"
       className="relative w-full bg-[#03060D] py-16 sm:py-24 overflow-hidden select-none border-t border-b border-[#2A52BE]/20"
     >
       {/* Background glow lines */}
